@@ -84,6 +84,79 @@ public class NgCaseServiceTests
     }
 
     [TestMethod]
+    public void UpdateInitialInspection_UpdatesCaseAndInitialHistory()
+    {
+        var service = new NgCaseService(_databasePath);
+        var originalModelId = service.CreateProductModel("M-EDIT-1", "旧型番");
+        var updatedModelId = service.CreateProductModel("M-EDIT-2", "新型番");
+        var originalReasonId = service.CreateDefectReason("旧理由");
+        var updatedReasonId = service.CreateDefectReason("新理由");
+        var actionId = service.CreateActionType("選別");
+        var originalProcessId = service.CreateProcess("組立");
+        var updatedProcessId = service.CreateProcess("最終検査");
+        var caseId = service.CreateCaseWithInitialInspection(new CreateCaseRequest
+        {
+            LotNumber = "LOT-OLD", ProductModelId = originalModelId, ProcessId = originalProcessId,
+            RegisteredAt = new DateTime(2026, 7, 14), InspectionDateTime = new DateTime(2026, 7, 14),
+            Result = InspectionResult.Ng, DefectReasonId = originalReasonId, InspectorName = "旧担当"
+        });
+
+        service.UpdateInitialInspection(caseId, new CreateCaseRequest
+        {
+            LotNumber = "LOT-NEW", ProductModelId = updatedModelId, ProcessId = updatedProcessId,
+            RegisteredAt = new DateTime(2026, 7, 15), Notes = "更新済み",
+            InspectionDateTime = new DateTime(2026, 7, 15), Result = InspectionResult.Ng,
+            DefectReasonId = updatedReasonId, DefectDetails = "更新後の詳細",
+            ActionTypeId = actionId, ActionDetails = "選別して再検査", InspectorName = "新担当"
+        });
+
+        var detail = service.GetCase(caseId);
+        Assert.IsNotNull(detail);
+        Assert.AreEqual("LOT-NEW", detail!.LotNumber);
+        Assert.AreEqual("新型番", detail.ProductModelName);
+        Assert.AreEqual("最終検査", detail.ProcessName);
+        Assert.AreEqual("更新済み", detail.Notes);
+        Assert.AreEqual(new DateTime(2026, 7, 15), detail.RegisteredAt);
+        Assert.AreEqual("新理由", detail.InspectionHistories[0].DefectReasonName);
+        Assert.AreEqual("更新後の詳細", detail.InspectionHistories[0].DefectDetails);
+        Assert.AreEqual("選別", detail.InspectionHistories[0].ActionTypeName);
+        Assert.AreEqual("新担当", detail.InspectionHistories[0].InspectorName);
+    }
+
+    [TestMethod]
+    public void UpdateInspectionHistory_UpdatesSelectedReinspectionOnly()
+    {
+        var service = new NgCaseService(_databasePath);
+        var modelId = service.CreateProductModel("M-HISTORY-EDIT", "履歴修正型番");
+        var reasonId = service.CreateDefectReason("外観不良");
+        var actionId = service.CreateActionType("再加工");
+        var caseId = service.CreateCaseWithInitialInspection(new CreateCaseRequest
+        {
+            LotNumber = "LOT-HISTORY", ProductModelId = modelId, RegisteredAt = new DateTime(2026, 7, 14),
+            InspectionDateTime = new DateTime(2026, 7, 14), Result = InspectionResult.Ng,
+            DefectReasonId = reasonId, InspectorName = "初回担当"
+        });
+        service.AddInspectionHistory(caseId, new InspectionHistoryInput
+        {
+            InspectionDateTime = new DateTime(2026, 7, 15), Result = InspectionResult.Ng,
+            DefectReasonId = reasonId, ActionTypeId = actionId, InspectorName = ""
+        });
+        var reinspectionId = service.GetCase(caseId)!.InspectionHistories.Max(x => x.Id);
+
+        service.UpdateInspectionHistory(caseId, reinspectionId, new InspectionHistoryInput
+        {
+            InspectionDateTime = new DateTime(2026, 7, 15), Result = InspectionResult.Ng,
+            DefectReasonId = reasonId, DefectDetails = "追記済み", ActionTypeId = actionId,
+            ActionDetails = "処置詳細", InspectorName = "再検査担当"
+        });
+
+        var histories = service.GetCase(caseId)!.InspectionHistories.OrderBy(x => x.Id).ToList();
+        Assert.AreEqual("初回担当", histories[0].InspectorName);
+        Assert.AreEqual("再検査担当", histories[1].InspectorName);
+        Assert.AreEqual("追記済み", histories[1].DefectDetails);
+    }
+
+    [TestMethod]
     public void CreateInitialCase_FailsAtomically_WhenValidationFails()
     {
         var service = new NgCaseService(_databasePath);

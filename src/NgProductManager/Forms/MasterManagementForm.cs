@@ -22,6 +22,12 @@ public partial class MasterManagementForm : Form
             listBoxModels.Items.Add($"{model.DisplayName} ({model.ModelCode})");
         }
 
+        listBoxProcesses.Items.Clear();
+        foreach (var process in _service.GetActiveProcesses())
+        {
+            listBoxProcesses.Items.Add(process.Name);
+        }
+
         listBoxDefectReasons.Items.Clear();
         foreach (var reason in _service.GetActiveDefectReasons())
         {
@@ -68,6 +74,26 @@ public partial class MasterManagementForm : Form
         {
             _service.CreateDefectReason(textBoxReasonName.Text);
             textBoxReasonName.Clear();
+            LoadMasters();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    private void buttonAddProcess_Click(object sender, EventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(textBoxProcessName.Text))
+        {
+            MessageBox.Show(this, "工程名を入力してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        try
+        {
+            _service.CreateProcess(textBoxProcessName.Text);
+            textBoxProcessName.Clear();
             LoadMasters();
         }
         catch (Exception ex)

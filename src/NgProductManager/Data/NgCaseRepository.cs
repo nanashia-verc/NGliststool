@@ -83,11 +83,12 @@ SELECT last_insert_rowid();";
             using var command = activeConnection.CreateCommand();
             command.Transaction = activeTransaction;
             command.CommandText = @"
-INSERT INTO NgCases (LotNumber, ProductModelId, SerialNumber, Status, Notes, RegisteredAt, ClosedAt, CreatedAt, UpdatedAt)
-VALUES (@LotNumber, @ProductModelId, @SerialNumber, @Status, @Notes, @RegisteredAt, @ClosedAt, @CreatedAt, @UpdatedAt);
+INSERT INTO NgCases (LotNumber, ProductModelId, ProcessId, SerialNumber, Status, Notes, RegisteredAt, ClosedAt, CreatedAt, UpdatedAt)
+VALUES (@LotNumber, @ProductModelId, @ProcessId, @SerialNumber, @Status, @Notes, @RegisteredAt, @ClosedAt, @CreatedAt, @UpdatedAt);
 SELECT last_insert_rowid();";
             command.Parameters.AddWithValue("@LotNumber", ngCase.LotNumber);
             command.Parameters.AddWithValue("@ProductModelId", ngCase.ProductModelId);
+            command.Parameters.AddWithValue("@ProcessId", (object?)ngCase.ProcessId ?? DBNull.Value);
             command.Parameters.AddWithValue("@SerialNumber", (object?)ngCase.SerialNumber ?? DBNull.Value);
             command.Parameters.AddWithValue("@Status", ngCase.Status);
             command.Parameters.AddWithValue("@Notes", (object?)ngCase.Notes ?? DBNull.Value);
@@ -178,7 +179,7 @@ WHERE Id = @Id;";
         {
             using var command = activeConnection.CreateCommand();
             command.Transaction = activeTransaction;
-            command.CommandText = "SELECT Id, LotNumber, ProductModelId, SerialNumber, Status, Notes, RegisteredAt, ClosedAt, CreatedAt, UpdatedAt FROM NgCases WHERE Id = @Id";
+            command.CommandText = "SELECT Id, LotNumber, ProductModelId, ProcessId, SerialNumber, Status, Notes, RegisteredAt, ClosedAt, CreatedAt, UpdatedAt FROM NgCases WHERE Id = @Id";
             command.Parameters.AddWithValue("@Id", caseId);
             using var reader = command.ExecuteReader();
             if (!reader.Read())
@@ -191,13 +192,14 @@ WHERE Id = @Id;";
                 Id = reader.GetInt32(0),
                 LotNumber = reader.GetString(1),
                 ProductModelId = reader.GetInt32(2),
-                SerialNumber = reader.IsDBNull(3) ? null : reader.GetString(3),
-                Status = reader.GetInt32(4),
-                Notes = reader.IsDBNull(5) ? null : reader.GetString(5),
-                RegisteredAt = DateTime.Parse(reader.GetString(6)),
-                ClosedAt = reader.IsDBNull(7) ? null : DateTime.Parse(reader.GetString(7)),
-                CreatedAt = DateTime.Parse(reader.GetString(8)),
-                UpdatedAt = DateTime.Parse(reader.GetString(9))
+                ProcessId = reader.IsDBNull(3) ? null : reader.GetInt32(3),
+                SerialNumber = reader.IsDBNull(4) ? null : reader.GetString(4),
+                Status = reader.GetInt32(5),
+                Notes = reader.IsDBNull(6) ? null : reader.GetString(6),
+                RegisteredAt = DateTime.Parse(reader.GetString(7)),
+                ClosedAt = reader.IsDBNull(8) ? null : DateTime.Parse(reader.GetString(8)),
+                CreatedAt = DateTime.Parse(reader.GetString(9)),
+                UpdatedAt = DateTime.Parse(reader.GetString(10))
             };
         }
         finally
@@ -351,6 +353,72 @@ SELECT last_insert_rowid();";
         }
     }
 
+    public void UpdateInspectionHistoryText(int historyId, string? defectDetails, string? actionDetails, string? inspectorName)
+    {
+        using var connection = _databaseManager.OpenConnection(); using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE InspectionHistories SET DefectDetails=@DefectDetails, ActionDetails=@ActionDetails, InspectorName=@InspectorName WHERE Id=@Id";
+        command.Parameters.AddWithValue("@DefectDetails", (object?)defectDetails ?? DBNull.Value); command.Parameters.AddWithValue("@ActionDetails", (object?)actionDetails ?? DBNull.Value); command.Parameters.AddWithValue("@InspectorName", (object?)inspectorName ?? DBNull.Value); command.Parameters.AddWithValue("@Id", historyId); command.ExecuteNonQuery();
+    }
+
+    public void UpdateInspectionHistory(int historyId, InspectionHistory history)
+    {
+        using var connection = _databaseManager.OpenConnection(); using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE InspectionHistories SET InspectionDateTime=@Date, Result=@Result, DefectReasonId=@Reason, DefectDetails=@Details, ActionTypeId=@Action, ActionDetails=@ActionDetails, InspectorName=@Inspector WHERE Id=@Id";
+        command.Parameters.AddWithValue("@Date", history.InspectionDateTime.ToString("yyyy-MM-dd HH:mm:ss")); command.Parameters.AddWithValue("@Result", history.Result); command.Parameters.AddWithValue("@Reason", (object?)history.DefectReasonId ?? DBNull.Value); command.Parameters.AddWithValue("@Details", (object?)history.DefectDetails ?? DBNull.Value); command.Parameters.AddWithValue("@Action", (object?)history.ActionTypeId ?? DBNull.Value); command.Parameters.AddWithValue("@ActionDetails", (object?)history.ActionDetails ?? DBNull.Value); command.Parameters.AddWithValue("@Inspector", (object?)history.InspectorName ?? DBNull.Value); command.Parameters.AddWithValue("@Id", historyId); command.ExecuteNonQuery();
+    }
+
+    public void UpdateCaseBasics(int caseId, string lotNumber, int productModelId, int? processId, string? notes, DateTime? registeredAt = null)
+    {
+        using var connection = _databaseManager.OpenConnection(); using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE NgCases SET LotNumber=@LotNumber, ProductModelId=@ModelId, ProcessId=@ProcessId, RegisteredAt=COALESCE(@RegisteredAt, RegisteredAt), Notes=@Notes, UpdatedAt=@UpdatedAt WHERE Id=@Id";
+        command.Parameters.AddWithValue("@LotNumber", lotNumber); command.Parameters.AddWithValue("@ModelId", productModelId); command.Parameters.AddWithValue("@ProcessId", (object?)processId ?? DBNull.Value); command.Parameters.AddWithValue("@RegisteredAt", registeredAt.HasValue ? registeredAt.Value.ToString("yyyy-MM-dd HH:mm:ss") : DBNull.Value); command.Parameters.AddWithValue("@Notes", (object?)notes ?? DBNull.Value); command.Parameters.AddWithValue("@UpdatedAt", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")); command.Parameters.AddWithValue("@Id", caseId); command.ExecuteNonQuery();
+    }
+
+    public int InsertAttachment(CaseAttachment attachment, SqliteConnection? connection = null, SqliteTransaction? transaction = null)
+    {
+        var activeConnection = connection ?? _databaseManager.OpenConnection();
+        try
+        {
+            using var command = activeConnection.CreateCommand(); command.Transaction = transaction;
+            command.CommandText = "INSERT INTO CaseAttachments (NgCaseId, FileName, ContentType, Content, CreatedAt) VALUES (@CaseId, @FileName, @ContentType, @Content, @CreatedAt); SELECT last_insert_rowid();";
+            command.Parameters.AddWithValue("@CaseId", attachment.NgCaseId); command.Parameters.AddWithValue("@FileName", attachment.FileName); command.Parameters.AddWithValue("@ContentType", (object?)attachment.ContentType ?? DBNull.Value); command.Parameters.AddWithValue("@Content", attachment.Content); command.Parameters.AddWithValue("@CreatedAt", attachment.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
+            return Convert.ToInt32(command.ExecuteScalar());
+        }
+        finally { if (connection is null) activeConnection.Dispose(); }
+    }
+
+    public List<CaseAttachment> GetAttachments(int caseId)
+    {
+        using var connection = _databaseManager.OpenConnection(); using var command = connection.CreateCommand();
+        command.CommandText = "SELECT Id, NgCaseId, FileName, ContentType, Content, CreatedAt FROM CaseAttachments WHERE NgCaseId = @CaseId ORDER BY Id"; command.Parameters.AddWithValue("@CaseId", caseId);
+        using var reader = command.ExecuteReader(); var items = new List<CaseAttachment>();
+        while (reader.Read()) items.Add(new CaseAttachment { Id = reader.GetInt32(0), NgCaseId = reader.GetInt32(1), FileName = reader.GetString(2), ContentType = reader.IsDBNull(3) ? null : reader.GetString(3), Content = (byte[])reader[4], CreatedAt = DateTime.Parse(reader.GetString(5)) });
+        return items;
+    }
+
+    public void DeleteCase(int caseId, SqliteConnection connection, SqliteTransaction transaction)
+    {
+        foreach (var sql in new[] { "DELETE FROM CaseAttachments WHERE NgCaseId = @Id", "DELETE FROM InspectionHistories WHERE NgCaseId = @Id", "DELETE FROM NgCases WHERE Id = @Id" })
+        {
+            using var command = connection.CreateCommand(); command.Transaction = transaction; command.CommandText = sql; command.Parameters.AddWithValue("@Id", caseId); command.ExecuteNonQuery();
+        }
+    }
+
+    public List<string> GetLotNumbers()
+    {
+        using var connection = _databaseManager.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT DISTINCT LotNumber FROM NgCases WHERE TRIM(LotNumber) <> '' ORDER BY LotNumber";
+        using var reader = command.ExecuteReader();
+        var lots = new List<string>();
+        while (reader.Read())
+        {
+            lots.Add(reader.GetString(0));
+        }
+
+        return lots;
+    }
+
     public List<DefectReasonMaster> GetDefectReasons(bool activeOnly = false, SqliteConnection? connection = null, SqliteTransaction? transaction = null)
     {
         var activeConnection = connection ?? _databaseManager.OpenConnection();
@@ -467,26 +535,21 @@ SELECT last_insert_rowid();";
             using var command = activeConnection.CreateCommand();
             command.Transaction = activeTransaction;
             var sql = @"
-SELECT ng.Id, ng.Status, ng.LotNumber, pm.DisplayName, ng.SerialNumber, ng.RegisteredAt,
-       latest.InspectionDateTime, latestDefect.DefectReasonName, latestAction.ActionTypeName, latest.HistoryCount,
+SELECT ng.Id, ng.Status, ng.LotNumber, pm.DisplayName, p.Name, ng.SerialNumber, ng.RegisteredAt,
+       latest.InspectionDateTime, latestDefect.Name, latestAction.Name, latest.HistoryCount,
        ng.UpdatedAt, ng.ClosedAt
 FROM NgCases ng
 LEFT JOIN ProductModels pm ON pm.Id = ng.ProductModelId
+LEFT JOIN Processes p ON p.Id = ng.ProcessId
 LEFT JOIN (
-    SELECT h.NgCaseId, MAX(h.InspectionDateTime) AS InspectionDateTime, COUNT(*) AS HistoryCount
+    SELECT h.NgCaseId, h.Id, h.InspectionDateTime,
+           (SELECT COUNT(*) FROM InspectionHistories c WHERE c.NgCaseId = h.NgCaseId) AS HistoryCount
     FROM InspectionHistories h
-    GROUP BY h.NgCaseId
+    WHERE h.Id = (SELECT h2.Id FROM InspectionHistories h2 WHERE h2.NgCaseId = h.NgCaseId ORDER BY h2.InspectionDateTime DESC, h2.Id DESC LIMIT 1)
 ) latest ON latest.NgCaseId = ng.Id
-LEFT JOIN (
-    SELECT h.NgCaseId, h.InspectionDateTime, dr.Name AS DefectReasonName
-    FROM InspectionHistories h
-    LEFT JOIN DefectReasons dr ON dr.Id = h.DefectReasonId
-) latestDefect ON latestDefect.NgCaseId = ng.Id AND latestDefect.InspectionDateTime = latest.InspectionDateTime
-LEFT JOIN (
-    SELECT h.NgCaseId, h.InspectionDateTime, at.Name AS ActionTypeName
-    FROM InspectionHistories h
-    LEFT JOIN ActionTypes at ON at.Id = h.ActionTypeId
-) latestAction ON latestAction.NgCaseId = ng.Id AND latestAction.InspectionDateTime = latest.InspectionDateTime
+LEFT JOIN InspectionHistories latestHistory ON latestHistory.Id = latest.Id
+LEFT JOIN DefectReasons latestDefect ON latestDefect.Id = latestHistory.DefectReasonId
+LEFT JOIN ActionTypes latestAction ON latestAction.Id = latestHistory.ActionTypeId
 WHERE 1 = 1";
 
             if (!includeClosed)
@@ -544,14 +607,15 @@ WHERE 1 = 1";
                     Status = (NgCaseStatus)reader.GetInt32(1),
                     LotNumber = reader.GetString(2),
                     ProductModelName = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
-                    SerialNumber = reader.IsDBNull(4) ? null : reader.GetString(4),
-                    RegisteredAt = DateTime.Parse(reader.GetString(5)),
-                    LatestInspectionDateTime = reader.IsDBNull(6) ? null : DateTime.Parse(reader.GetString(6)),
-                    LatestDefectReasonName = reader.IsDBNull(7) ? null : reader.GetString(7),
-                    LatestActionTypeName = reader.IsDBNull(8) ? null : reader.GetString(8),
-                    InspectionHistoryCount = reader.GetInt32(9),
-                    UpdatedAt = DateTime.Parse(reader.GetString(10)),
-                    ClosedAt = reader.IsDBNull(11) ? null : DateTime.Parse(reader.GetString(11))
+                    ProcessName = reader.IsDBNull(4) ? null : reader.GetString(4),
+                    SerialNumber = reader.IsDBNull(5) ? null : reader.GetString(5),
+                    RegisteredAt = DateTime.Parse(reader.GetString(6)),
+                    LatestInspectionDateTime = reader.IsDBNull(7) ? null : DateTime.Parse(reader.GetString(7)),
+                    LatestDefectReasonName = reader.IsDBNull(8) ? null : reader.GetString(8),
+                    LatestActionTypeName = reader.IsDBNull(9) ? null : reader.GetString(9),
+                    InspectionHistoryCount = reader.GetInt32(10),
+                    UpdatedAt = DateTime.Parse(reader.GetString(11)),
+                    ClosedAt = reader.IsDBNull(12) ? null : DateTime.Parse(reader.GetString(12))
                 });
             }
 

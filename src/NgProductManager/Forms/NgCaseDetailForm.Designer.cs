@@ -3,95 +3,21 @@ namespace NgProductManager.Forms;
 partial class NgCaseDetailForm
 {
     private System.ComponentModel.IContainer components = null;
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing && (components != null))
-        {
-            components.Dispose();
-        }
-        base.Dispose(disposing);
-    }
-
+    protected override void Dispose(bool disposing) { if (disposing && components is not null) components.Dispose(); base.Dispose(disposing); }
     private void InitializeComponent()
     {
-        this.Text = "案件詳細";
-        this.ClientSize = new System.Drawing.Size(1000, 700);
-        this.StartPosition = FormStartPosition.CenterParent;
-
-        var topPanel = new TableLayoutPanel { Dock = DockStyle.Top, Padding = new Padding(12), AutoSize = true, ColumnCount = 2, RowCount = 5 };
-        topPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25));
-        topPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 75));
-
-        AddLabel(topPanel, 0, "ロット番号");
-        labelLotNumber = new Label { AutoSize = true };
-        topPanel.Controls.Add(labelLotNumber, 1, 0);
-
-        AddLabel(topPanel, 1, "型番");
-        labelProductModel = new Label { AutoSize = true };
-        topPanel.Controls.Add(labelProductModel, 1, 1);
-
-        AddLabel(topPanel, 2, "状態");
-        labelStatus = new Label { AutoSize = true };
-        topPanel.Controls.Add(labelStatus, 1, 2);
-
-        AddLabel(topPanel, 3, "登録日");
-        labelRegisteredAt = new Label { AutoSize = true };
-        topPanel.Controls.Add(labelRegisteredAt, 1, 3);
-
-        AddLabel(topPanel, 4, "クローズ日");
-        labelClosedAt = new Label { AutoSize = true };
-        topPanel.Controls.Add(labelClosedAt, 1, 4);
-
-        this.Controls.Add(topPanel);
-
-        var notesPanel = new GroupBox { Dock = DockStyle.Top, Text = "備考", Height = 120, Padding = new Padding(8) };
-        labelNotes = new Label { AutoSize = true, MaximumSize = new Size(900, 80) };
-        notesPanel.Controls.Add(labelNotes);
-        this.Controls.Add(notesPanel);
-
-        var buttonPanel = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(10) };
-        buttonAddReinspection = new Button { Text = "再検査結果追加", Width = 140, Margin = new Padding(0, 0, 5, 0) };
-        buttonPanel.Controls.Add(buttonAddReinspection);
-        buttonCloseCase = new Button { Text = "検査OK・クローズ", Width = 140, Margin = new Padding(0, 0, 5, 0) };
-        buttonPanel.Controls.Add(buttonCloseCase);
-        buttonUpdateNotes = new Button { Text = "備考更新", Width = 110, Margin = new Padding(0, 0, 5, 0) };
-        buttonPanel.Controls.Add(buttonUpdateNotes);
-        this.Controls.Add(buttonPanel);
-
-        historyGrid = new DataGridView { Dock = DockStyle.Fill, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, ReadOnly = true, AllowUserToAddRows = false, AllowUserToDeleteRows = false };
-        historyGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "回数", DataPropertyName = "Sequence", Width = 60 });
-        historyGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "検査日", DataPropertyName = "InspectionDateTime", Width = 100 });
-        historyGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "結果", DataPropertyName = "Result", Width = 60 });
-        historyGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "NG理由", DataPropertyName = "DefectReasonName", Width = 120 });
-        historyGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "詳細", DataPropertyName = "DefectDetails", Width = 180 });
-        historyGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "処置", DataPropertyName = "ActionTypeName", Width = 120 });
-        historyGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "処置詳細", DataPropertyName = "ActionDetails", Width = 180 });
-        historyGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "担当者", DataPropertyName = "InspectorName", Width = 100 });
-        this.Controls.Add(historyGrid);
-
-        bindingSource = new BindingSource();
-        historyGrid.DataSource = bindingSource;
-
-        buttonAddReinspection.Click += buttonAddReinspection_Click;
-        buttonCloseCase.Click += buttonCloseCase_Click;
-        buttonUpdateNotes.Click += buttonUpdateNotes_Click;
+        Text = "案件詳細"; ClientSize = new Size(980, 620); MinimumSize = new Size(760, 480); StartPosition = FormStartPosition.CenterParent;
+        var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(12), ColumnCount = 1, RowCount = 4 };
+        root.RowStyles.Add(new RowStyle(SizeType.AutoSize)); root.RowStyles.Add(new RowStyle(SizeType.AutoSize)); root.RowStyles.Add(new RowStyle(SizeType.AutoSize)); root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        var buttons = new FlowLayoutPanel { AutoSize = true, Margin = new Padding(0, 0, 0, 6) };
+        buttonAddReinspection = AddButton(buttons, "再検査結果追加", 130); buttonCloseCase = AddButton(buttons, "検査OK・クローズ", 130); buttonUpdateNotes = AddButton(buttons, "内容修正", 100); buttonAddAttachment = AddButton(buttons, "画像添付", 100); buttonShowAttachments = AddButton(buttons, "添付画像", 100); buttonDeleteCase = AddButton(buttons, "案件削除", 100); root.Controls.Add(buttons, 0, 0);
+        var summary = new TableLayoutPanel { AutoSize = true, ColumnCount = 4, Margin = new Padding(0, 0, 0, 6) }; summary.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); summary.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50)); summary.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); summary.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        labelLotNumber = AddValue(summary, "ロット番号", 0, 0); labelProductModel = AddValue(summary, "型番", 2, 0); labelProcess = AddValue(summary, "工程", 0, 1); labelStatus = AddValue(summary, "状態", 2, 1); labelRegisteredAt = AddValue(summary, "登録日", 0, 2); labelClosedAt = AddValue(summary, "クローズ日", 2, 2); root.Controls.Add(summary, 0, 1);
+        var notes = new GroupBox { Text = "備考", AutoSize = true, Dock = DockStyle.Top, Padding = new Padding(8), Margin = new Padding(0, 0, 0, 6) }; labelNotes = new Label { AutoSize = true, MaximumSize = new Size(900, 60) }; notes.Controls.Add(labelNotes); root.Controls.Add(notes, 0, 2);
+        historyGrid = new DataGridView { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false, AllowUserToDeleteRows = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, BackgroundColor = SystemColors.Window }; foreach (var column in new[] { ("現在", "CurrentState"), ("回数", "Sequence"), ("検査日", "InspectionDateTime"), ("結果", "Result"), ("NG理由", "DefectReasonName"), ("詳細", "DefectDetails"), ("処置", "ActionTypeName"), ("処置詳細", "ActionDetails"), ("担当者", "InspectorName") }) historyGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = column.Item1, DataPropertyName = column.Item2 }); historyGrid.RowPrePaint += (_, e) => { if (e.RowIndex == 0) { var row = historyGrid.Rows[e.RowIndex]; row.DefaultCellStyle.BackColor = Color.LightGoldenrodYellow; row.DefaultCellStyle.ForeColor = Color.DarkBlue; } }; bindingSource = new BindingSource(); historyGrid.DataSource = bindingSource; root.Controls.Add(historyGrid, 0, 3); Controls.Add(root);
+        buttonAddReinspection.Click += buttonAddReinspection_Click; buttonCloseCase.Click += buttonCloseCase_Click; buttonUpdateNotes.Click += buttonUpdateNotes_Click; buttonAddAttachment.Click += buttonAddAttachment_Click; buttonShowAttachments.Click += buttonShowAttachments_Click; buttonDeleteCase.Click += buttonDeleteCase_Click;
     }
-
-    private static void AddLabel(TableLayoutPanel table, int row, string text)
-    {
-        table.Controls.Add(new Label { Text = text, AutoSize = true, Margin = new Padding(0, 5, 0, 0) }, 0, row);
-    }
-
-    private Label labelLotNumber = null!;
-    private Label labelProductModel = null!;
-    private Label labelStatus = null!;
-    private Label labelRegisteredAt = null!;
-    private Label labelClosedAt = null!;
-    private Label labelNotes = null!;
-    private Button buttonAddReinspection = null!;
-    private Button buttonCloseCase = null!;
-    private Button buttonUpdateNotes = null!;
-    private DataGridView historyGrid = null!;
-    private BindingSource bindingSource = null!;
+    private static Button AddButton(FlowLayoutPanel panel, string text, int width) { var b = new Button { Text = text, Width = width, Margin = new Padding(0, 0, 6, 0) }; panel.Controls.Add(b); return b; }
+    private static Label AddValue(TableLayoutPanel panel, string text, int column, int row) { panel.Controls.Add(new Label { Text = text, AutoSize = true, Margin = new Padding(0, 4, 8, 4) }, column, row); var value = new Label { AutoSize = true, Margin = new Padding(0, 4, 20, 4) }; panel.Controls.Add(value, column + 1, row); return value; }
+    private Label labelLotNumber = null!, labelProductModel = null!, labelProcess = null!, labelStatus = null!, labelRegisteredAt = null!, labelClosedAt = null!, labelNotes = null!; private Button buttonAddReinspection = null!, buttonCloseCase = null!, buttonUpdateNotes = null!, buttonAddAttachment = null!, buttonShowAttachments = null!, buttonDeleteCase = null!; private DataGridView historyGrid = null!; private BindingSource bindingSource = null!;
 }

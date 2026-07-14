@@ -16,11 +16,6 @@ public sealed class DatabaseManager
 
     public void EnsureDatabaseCreated()
     {
-        if (File.Exists(_databasePath))
-        {
-            return;
-        }
-
         var directory = Path.GetDirectoryName(_databasePath);
         if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
         {
@@ -28,7 +23,6 @@ public sealed class DatabaseManager
         }
 
         using var connection = OpenConnection();
-        connection.Open();
 
         var createSql = @"
 CREATE TABLE IF NOT EXISTS NgCases (
@@ -88,16 +82,51 @@ CREATE TABLE IF NOT EXISTS ActionTypes (
     UpdatedAt TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS Processes (
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    Name TEXT NOT NULL UNIQUE,
+    IsActive INTEGER NOT NULL,
+    SortOrder INTEGER NOT NULL,
+    CreatedAt TEXT NOT NULL,
+    UpdatedAt TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS CaseAttachments (
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    NgCaseId INTEGER NOT NULL,
+    FileName TEXT NOT NULL,
+    ContentType TEXT,
+    Content BLOB NOT NULL,
+    CreatedAt TEXT NOT NULL,
+    FOREIGN KEY(NgCaseId) REFERENCES NgCases(Id)
+);
+
 CREATE INDEX IF NOT EXISTS IDX_NgCases_LotNumber ON NgCases(LotNumber);
 CREATE INDEX IF NOT EXISTS IDX_NgCases_ProductModelId ON NgCases(ProductModelId);
 CREATE INDEX IF NOT EXISTS IDX_NgCases_Status ON NgCases(Status);
 CREATE INDEX IF NOT EXISTS IDX_NgCases_RegisteredAt ON NgCases(RegisteredAt);
 CREATE INDEX IF NOT EXISTS IDX_InspectionHistories_InspectionDateTime ON InspectionHistories(InspectionDateTime);
+CREATE INDEX IF NOT EXISTS IDX_CaseAttachments_NgCaseId ON CaseAttachments(NgCaseId);
 ";
 
         using var command = connection.CreateCommand();
         command.CommandText = createSql;
         command.ExecuteNonQuery();
+        AddColumnIfMissing(connection, "NgCases", "ProcessId", "INTEGER");
+    }
+
+    private static void AddColumnIfMissing(SqliteConnection connection, string tableName, string columnName, string definition)
+    {
+        using var check = connection.CreateCommand();
+        check.CommandText = $"PRAGMA table_info({tableName});";
+        using var reader = check.ExecuteReader();
+        while (reader.Read())
+        {
+            if (string.Equals(reader.GetString(1), columnName, StringComparison.OrdinalIgnoreCase)) return;
+        }
+        using var alter = connection.CreateCommand();
+        alter.CommandText = $"ALTER TABLE {tableName} ADD COLUMN {columnName} {definition};";
+        alter.ExecuteNonQuery();
     }
 
     public SqliteConnection OpenConnection()

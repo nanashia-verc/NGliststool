@@ -24,6 +24,7 @@ public class NgCase
     public int Id { get; set; }
     public string LotNumber { get; set; } = string.Empty;
     public int ProductModelId { get; set; }
+    public int? ProcessId { get; set; }
     public string? SerialNumber { get; set; }
     public int Status { get; set; }
     public string? Notes { get; set; }
@@ -57,6 +58,26 @@ public class ProductModelMaster
     public DateTime UpdatedAt { get; set; }
 }
 
+public class CaseAttachment
+{
+    public int Id { get; set; }
+    public int NgCaseId { get; set; }
+    public string FileName { get; set; } = string.Empty;
+    public string? ContentType { get; set; }
+    public byte[] Content { get; set; } = Array.Empty<byte>();
+    public DateTime CreatedAt { get; set; }
+}
+
+public class ProcessMaster
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public int IsActive { get; set; }
+    public int SortOrder { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
 public class DefectReasonMaster
 {
     public int Id { get; set; }
@@ -81,7 +102,10 @@ public class NgCaseDetail
 {
     public int Id { get; set; }
     public string LotNumber { get; set; } = string.Empty;
+    public int ProductModelId { get; set; }
+    public int? ProcessId { get; set; }
     public string ProductModelName { get; set; } = string.Empty;
+    public string? ProcessName { get; set; }
     public string? SerialNumber { get; set; }
     public NgCaseStatus Status { get; set; }
     public string? Notes { get; set; }
@@ -111,6 +135,7 @@ public class NgCaseListItem
     public NgCaseStatus Status { get; set; }
     public string LotNumber { get; set; } = string.Empty;
     public string ProductModelName { get; set; } = string.Empty;
+    public string? ProcessName { get; set; }
     public string? SerialNumber { get; set; }
     public DateTime RegisteredAt { get; set; }
     public DateTime? LatestInspectionDateTime { get; set; }
@@ -125,6 +150,7 @@ public class CreateCaseRequest
 {
     public string LotNumber { get; set; } = string.Empty;
     public int ProductModelId { get; set; }
+    public int? ProcessId { get; set; }
     public string? SerialNumber { get; set; }
     public DateTime RegisteredAt { get; set; }
     public string? Notes { get; set; }

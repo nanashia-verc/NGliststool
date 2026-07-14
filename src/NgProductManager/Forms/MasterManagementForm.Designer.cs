@@ -33,12 +33,14 @@ partial class MasterManagementForm
 
         var tab = new TabControl { Dock = DockStyle.Fill };
         tab.TabPages.Add(CreateModelPage());
+        tab.TabPages.Add(CreateSingleNamePage("工程", "工程名", out listBoxProcesses, out textBoxProcessName, out buttonAddProcess));
         tab.TabPages.Add(CreateSingleNamePage("NG理由", "NG理由名", out listBoxDefectReasons, out textBoxReasonName, out buttonAddReason));
         tab.TabPages.Add(CreateSingleNamePage("処置内容", "処置内容名", out listBoxActionTypes, out textBoxActionName, out buttonAddAction));
         root.Controls.Add(tab, 0, 1);
         Controls.Add(root);
 
         buttonAddModel.Click += buttonAddModel_Click;
+        buttonAddProcess.Click += buttonAddProcess_Click;
         buttonAddReason.Click += buttonAddReason_Click;
         buttonAddAction.Click += buttonAddAction_Click;
     }
@@ -94,13 +96,16 @@ partial class MasterManagementForm
     }
 
     private ListBox listBoxModels = null!;
+    private ListBox listBoxProcesses = null!;
     private ListBox listBoxDefectReasons = null!;
     private ListBox listBoxActionTypes = null!;
     private TextBox textBoxModelCode = null!;
     private TextBox textBoxModelName = null!;
+    private TextBox textBoxProcessName = null!;
     private TextBox textBoxReasonName = null!;
     private TextBox textBoxActionName = null!;
     private Button buttonAddModel = null!;
+    private Button buttonAddProcess = null!;
     private Button buttonAddReason = null!;
     private Button buttonAddAction = null!;
 }

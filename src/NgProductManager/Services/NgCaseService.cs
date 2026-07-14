@@ -61,6 +61,29 @@ public sealed class NgCaseService
 
     public List<ProductModelMaster> GetActiveProductModels() => _repository.GetProductModels(activeOnly: true);
 
+    public int CreateProcess(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) throw new InvalidOperationException("工程名は必須です。");
+        using var connection = _databaseManager.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "INSERT OR IGNORE INTO Processes (Name, IsActive, SortOrder, CreatedAt, UpdatedAt) VALUES (@Name, 1, 0, @Now, @Now); SELECT Id FROM Processes WHERE Name = @Name;";
+        command.Parameters.AddWithValue("@Name", name.Trim()); command.Parameters.AddWithValue("@Now", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+        return Convert.ToInt32(command.ExecuteScalar());
+    }
+
+    public List<ProcessMaster> GetActiveProcesses()
+    {
+        using var connection = _databaseManager.OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT Id, Name, IsActive, SortOrder, CreatedAt, UpdatedAt FROM Processes WHERE IsActive = 1 ORDER BY SortOrder, Name";
+        using var reader = command.ExecuteReader();
+        var items = new List<ProcessMaster>();
+        while (reader.Read()) items.Add(new ProcessMaster { Id = reader.GetInt32(0), Name = reader.GetString(1), IsActive = reader.GetInt32(2), SortOrder = reader.GetInt32(3), CreatedAt = DateTime.Parse(reader.GetString(4)), UpdatedAt = DateTime.Parse(reader.GetString(5)) });
+        return items;
+    }
+
+    public List<string> GetLotNumbers() => _repository.GetLotNumbers();
+
     public int CreateDefectReason(string name, int sortOrder = 0)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -122,6 +145,7 @@ public sealed class NgCaseService
             {
                 LotNumber = request.LotNumber.Trim(),
                 ProductModelId = request.ProductModelId,
+                ProcessId = request.ProcessId,
                 SerialNumber = string.IsNullOrWhiteSpace(request.SerialNumber) ? null : request.SerialNumber.Trim(),
                 Status = (int)NgCaseStatus.InProgress,
                 Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim(),
@@ -243,6 +267,7 @@ public sealed class NgCaseService
         }
 
         var productModel = _repository.GetProductModels().FirstOrDefault(x => x.Id == ngCase.ProductModelId);
+        var process = ngCase.ProcessId.HasValue ? GetActiveProcesses().FirstOrDefault(x => x.Id == ngCase.ProcessId.Value) : null;
         var histories = _repository.GetInspectionHistories(id).Select(history => new InspectionHistoryDetail
         {
             Id = history.Id,
@@ -260,7 +285,10 @@ public sealed class NgCaseService
         {
             Id = ngCase.Id,
             LotNumber = ngCase.LotNumber,
+            ProductModelId = ngCase.ProductModelId,
+            ProcessId = ngCase.ProcessId,
             ProductModelName = productModel?.DisplayName ?? string.Empty,
+            ProcessName = process?.Name,
             SerialNumber = ngCase.SerialNumber,
             Status = (NgCaseStatus)ngCase.Status,
             Notes = ngCase.Notes,
@@ -277,6 +305,43 @@ public sealed class NgCaseService
         return _repository.SearchCases(criteria, includeClosed);
     }
 
+    public void UpdateInspectionHistory(int ngCaseId, int historyId, InspectionHistoryInput input)
+    {
+        if (!_repository.CaseExists(ngCaseId)) throw new InvalidOperationException("対象案件が見つかりません。");
+        ValidateInspectionHistoryInput(input);
+
+        var history = _repository.GetInspectionHistories(ngCaseId).FirstOrDefault(x => x.Id == historyId);
+        if (history is null) throw new InvalidOperationException("対象の検査履歴が見つかりません。");
+
+        history.InspectionDateTime = input.InspectionDateTime;
+        history.Result = (int)input.Result;
+        history.DefectReasonId = input.DefectReasonId;
+        history.DefectDetails = string.IsNullOrWhiteSpace(input.DefectDetails) ? null : input.DefectDetails.Trim();
+        history.ActionTypeId = input.ActionTypeId;
+        history.ActionDetails = string.IsNullOrWhiteSpace(input.ActionDetails) ? null : input.ActionDetails.Trim();
+        history.InspectorName = string.IsNullOrWhiteSpace(input.InspectorName) ? null : input.InspectorName.Trim();
+        _repository.UpdateInspectionHistory(historyId, history);
+    }
+
+    public void DeleteCase(int caseId)
+    {
+        if (!_repository.CaseExists(caseId)) throw new InvalidOperationException("対象案件が見つかりません。");
+        using var connection = _databaseManager.OpenConnection(); using var transaction = connection.BeginTransaction();
+        _repository.DeleteCase(caseId, connection, transaction);
+        transaction.Commit();
+    }
+
+    public int AddAttachment(int caseId, string filePath)
+    {
+        if (!_repository.CaseExists(caseId)) throw new InvalidOperationException("対象案件が見つかりません。");
+        if (!File.Exists(filePath)) throw new InvalidOperationException("添付ファイルが見つかりません。");
+        var extension = Path.GetExtension(filePath).ToLowerInvariant();
+        if (extension is not ".png" and not ".jpg" and not ".jpeg" and not ".bmp") throw new InvalidOperationException("画像ファイルを選択してください。");
+        return _repository.InsertAttachment(new CaseAttachment { NgCaseId = caseId, FileName = Path.GetFileName(filePath), ContentType = extension, Content = File.ReadAllBytes(filePath), CreatedAt = DateTime.Now });
+    }
+
+    public List<CaseAttachment> GetAttachments(int caseId) => _repository.GetAttachments(caseId);
+
     public void UpdateCaseNotes(int caseId, string notes)
     {
         var ngCase = _repository.GetNgCase(caseId);
@@ -286,6 +351,41 @@ public sealed class NgCaseService
         }
 
         _repository.UpdateNgCaseStatus(caseId, (NgCaseStatus)ngCase.Status, ngCase.ClosedAt, notes);
+    }
+
+    public void UpdateCaseBasics(int caseId, string lotNumber, int productModelId, int? processId, string? notes)
+    {
+        if (string.IsNullOrWhiteSpace(lotNumber)) throw new InvalidOperationException("ロット番号は必須です。");
+        if (!_repository.CaseExists(caseId)) throw new InvalidOperationException("対象案件が見つかりません。");
+        _repository.UpdateCaseBasics(caseId, lotNumber.Trim(), productModelId, processId, notes);
+    }
+
+    public void UpdateInspectionHistoryText(int historyId, string? defectDetails, string? actionDetails, string? inspectorName) => _repository.UpdateInspectionHistoryText(historyId, defectDetails, actionDetails, inspectorName);
+
+    public void UpdateInitialInspection(int caseId, CreateCaseRequest request)
+    {
+        ValidateCreateCaseRequest(request);
+
+        if (!_repository.CaseExists(caseId))
+        {
+            throw new InvalidOperationException("対象案件が見つかりません。");
+        }
+
+        var initialHistory = _repository.GetInspectionHistories(caseId).FirstOrDefault();
+        if (initialHistory is null)
+        {
+            throw new InvalidOperationException("初回検査履歴が見つかりません。");
+        }
+
+        _repository.UpdateCaseBasics(caseId, request.LotNumber.Trim(), request.ProductModelId, request.ProcessId, request.Notes, request.RegisteredAt);
+        initialHistory.InspectionDateTime = request.InspectionDateTime;
+        initialHistory.Result = (int)request.Result;
+        initialHistory.DefectReasonId = request.DefectReasonId;
+        initialHistory.DefectDetails = string.IsNullOrWhiteSpace(request.DefectDetails) ? null : request.DefectDetails.Trim();
+        initialHistory.ActionTypeId = request.ActionTypeId;
+        initialHistory.ActionDetails = string.IsNullOrWhiteSpace(request.ActionDetails) ? null : request.ActionDetails.Trim();
+        initialHistory.InspectorName = string.IsNullOrWhiteSpace(request.InspectorName) ? null : request.InspectorName.Trim();
+        _repository.UpdateInspectionHistory(initialHistory.Id, initialHistory);
     }
 
     public List<DefectReasonMaster> GetActiveDefectReasons() => _repository.GetDefectReasons(activeOnly: true);
@@ -319,7 +419,7 @@ public sealed class NgCaseService
         {
             var cases = SearchCases(criteria, includeClosed);
             using var writer = new StreamWriter(outputPath, false, new System.Text.UTF8Encoding(true));
-            writer.WriteLine("案件ID,状態,ロット番号,型番,初回NG日,最新検査日,最新NG理由,最新処置,NG回数,登録日,クローズ日");
+            writer.WriteLine("案件ID,状態,ロット番号,型番,工程,初回NG日,最新検査日,最新NG理由,最新処置,NG回数,登録日,クローズ日");
             foreach (var item in cases)
             {
                 var ngCase = GetCase(item.Id);
@@ -330,6 +430,7 @@ public sealed class NgCaseService
                     EscapeCsv(item.Status.ToString()),
                     EscapeCsv(item.LotNumber),
                     EscapeCsv(item.ProductModelName),
+                    EscapeCsv(item.ProcessName ?? string.Empty),
                     EscapeCsv(initialHistory?.InspectionDateTime.ToString("yyyy-MM-dd") ?? string.Empty),
                     EscapeCsv(latestHistory?.InspectionDateTime.ToString("yyyy-MM-dd") ?? string.Empty),
                     EscapeCsv(latestHistory?.DefectReasonName ?? string.Empty),
@@ -419,10 +520,6 @@ public sealed class NgCaseService
                 throw new InvalidOperationException("NG理由を選択してください。マスター管理から登録してください。", new InvalidOperationException());
             }
 
-            if (request.ActionTypeId is null || !_repository.GetActionTypes(activeOnly: true).Any(x => x.Id == request.ActionTypeId.Value))
-            {
-                throw new InvalidOperationException("処置内容を選択してください。マスター管理から登録してください。", new InvalidOperationException());
-            }
         }
     }
 
@@ -435,10 +532,6 @@ public sealed class NgCaseService
                 throw new InvalidOperationException("NG理由を選択してください。マスター管理から登録してください。", new InvalidOperationException());
             }
 
-            if (input.ActionTypeId is null || !_repository.GetActionTypes(activeOnly: true).Any(x => x.Id == input.ActionTypeId.Value))
-            {
-                throw new InvalidOperationException("処置内容を選択してください。マスター管理から登録してください。", new InvalidOperationException());
-            }
         }
     }
 }
