@@ -1,0 +1,77 @@
+using NgProductManager.Models;
+using NgProductManager.Services;
+
+namespace NgProductManager.Forms;
+
+public partial class AddInspectionHistoryForm : Form
+{
+    private readonly NgCaseService _service;
+    private readonly int _caseId;
+
+    public AddInspectionHistoryForm(NgCaseService service, int caseId)
+    {
+        _service = service;
+        _caseId = caseId;
+        InitializeComponent();
+        LoadMasters();
+    }
+
+    private void LoadMasters()
+    {
+        comboBoxDefectReason.Items.Clear();
+        foreach (var reason in _service.GetActiveDefectReasons())
+        {
+            comboBoxDefectReason.Items.Add(new ComboBoxItem<int>(reason.Name, reason.Id));
+        }
+
+        comboBoxAction.Items.Clear();
+        foreach (var action in _service.GetActiveActionTypes())
+        {
+            comboBoxAction.Items.Add(new ComboBoxItem<int>(action.Name, action.Id));
+        }
+    }
+
+    private void buttonSave_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            var input = new InspectionHistoryInput
+            {
+                InspectionDateTime = dateTimePickerInspection.Value,
+                Result = radioButtonNg.Checked ? InspectionResult.Ng : InspectionResult.Ok,
+                DefectReasonId = ((ComboBoxItem<int>)comboBoxDefectReason.SelectedItem!).Value,
+                DefectDetails = textBoxDefectDetails.Text,
+                ActionTypeId = ((ComboBoxItem<int>)comboBoxAction.SelectedItem!).Value,
+                ActionDetails = textBoxActionDetails.Text,
+                InspectorName = textBoxInspectorName.Text,
+                NextStatus = radioButtonPending.Checked ? NgCaseStatus.PendingReinspection : NgCaseStatus.InProgress
+            };
+
+            _service.AddInspectionHistory(_caseId, input);
+            DialogResult = DialogResult.OK;
+            Close();
+        }
+        catch (InvalidOperationException ex)
+        {
+            MessageBox.Show(this, ex.Message, "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, "保存に失敗しました。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    private sealed class ComboBoxItem<T>
+    {
+        public ComboBoxItem(string displayText, T value)
+        {
+            DisplayText = displayText;
+            Value = value;
+        }
+
+        public string DisplayText { get; }
+        public T Value { get; }
+
+        public override string ToString() => DisplayText;
+    }
+}

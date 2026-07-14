@@ -1,0 +1,22 @@
+## .NET / Visual Studio
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.cache
+*.pdb
+*.db
+*.db-journal
+*.log
+
+## Test results
+TestResults/
+coverage/
+
+## Publish output
+publish/
+artifacts/
+
+## Release packaging
+*.zip
