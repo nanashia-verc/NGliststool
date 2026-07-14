@@ -33,8 +33,8 @@ public partial class NgCaseDetailForm : Form
             NgCaseStatus.Closed => "クローズ済み",
             _ => string.Empty
         };
-        labelRegisteredAt.Text = detail.RegisteredAt.ToString("yyyy/MM/dd HH:mm");
-        labelClosedAt.Text = detail.ClosedAt?.ToString("yyyy/MM/dd HH:mm") ?? string.Empty;
+        labelRegisteredAt.Text = detail.RegisteredAt.ToString("yyyy/MM/dd");
+        labelClosedAt.Text = detail.ClosedAt?.ToString("yyyy/MM/dd") ?? string.Empty;
         labelNotes.Text = detail.Notes ?? string.Empty;
 
         var rows = detail.InspectionHistories.Select((history, index) => new InspectionRowViewModel(index + 1, history)).ToList();
@@ -82,7 +82,7 @@ public partial class NgCaseDetailForm : Form
         public InspectionRowViewModel(int sequence, InspectionHistoryDetail history)
         {
             Sequence = sequence;
-            InspectionDateTime = history.InspectionDateTime.ToString("yyyy/MM/dd HH:mm");
+            InspectionDateTime = history.InspectionDateTime.ToString("yyyy/MM/dd");
             Result = history.Result == InspectionResult.Ng ? "NG" : "OK";
             DefectReasonName = history.DefectReasonName ?? string.Empty;
             DefectDetails = history.DefectDetails ?? string.Empty;

@@ -1,5 +1,6 @@
 using NgProductManager.Models;
 using NgProductManager.Services;
+using NgProductManager.Utilities;
 
 namespace NgProductManager.Forms;
 
@@ -81,8 +82,9 @@ public partial class NewNgCaseForm : Form
         {
             MessageBox.Show(this, ex.Message, "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            AppLogger.WriteError("新規NG案件の保存に失敗しました。", ex);
             MessageBox.Show(this, "保存に失敗しました。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }

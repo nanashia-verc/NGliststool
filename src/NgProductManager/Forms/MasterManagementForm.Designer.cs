@@ -6,77 +6,91 @@ partial class MasterManagementForm
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing && (components != null))
+        if (disposing && components is not null)
         {
             components.Dispose();
         }
+
         base.Dispose(disposing);
     }
 
     private void InitializeComponent()
     {
-        this.Text = "マスター管理";
-        this.ClientSize = new System.Drawing.Size(900, 560);
-        this.StartPosition = FormStartPosition.CenterParent;
+        Text = "マスター管理";
+        ClientSize = new Size(680, 420);
+        MinimumSize = new Size(620, 380);
+        StartPosition = FormStartPosition.CenterParent;
 
-        var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(10), RowCount = 2, ColumnCount = 1 };
+        var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(12), ColumnCount = 1, RowCount = 2 };
         root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        root.Controls.Add(new Label { Text = "登録したマスターは新規NG登録画面ですぐに使えます。", AutoSize = true, Margin = new Padding(0, 0, 0, 6) }, 0, 0);
+        root.Controls.Add(new Label
+        {
+            Text = "型番・NG理由・処置内容を登録すると、新規NG登録で選択できます。",
+            AutoSize = true,
+            Margin = new Padding(0, 0, 0, 8)
+        }, 0, 0);
 
         var tab = new TabControl { Dock = DockStyle.Fill };
+        tab.TabPages.Add(CreateModelPage());
+        tab.TabPages.Add(CreateSingleNamePage("NG理由", "NG理由名", out listBoxDefectReasons, out textBoxReasonName, out buttonAddReason));
+        tab.TabPages.Add(CreateSingleNamePage("処置内容", "処置内容名", out listBoxActionTypes, out textBoxActionName, out buttonAddAction));
         root.Controls.Add(tab, 0, 1);
-        this.Controls.Add(root);
-        var pageModels = new TabPage("型番");
-        var pageReasons = new TabPage("NG理由");
-        var pageActions = new TabPage("処置内容");
-
-        var modelPanel = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(10), ColumnCount = 2, RowCount = 2 };
-        listBoxModels = new ListBox { Dock = DockStyle.Fill };
-        modelPanel.Controls.Add(listBoxModels, 0, 0);
-
-        var modelInput = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(10) };
-        textBoxModelCode = new TextBox();
-        textBoxModelName = new TextBox();
-        buttonAddModel = new Button { Text = "追加", Width = 100 };
-        modelInput.Controls.Add(new Label { Text = "型番コード" }, 0, 0);
-        modelInput.Controls.Add(textBoxModelCode, 0, 1);
-        modelInput.Controls.Add(new Label { Text = "表示名" }, 0, 2);
-        modelInput.Controls.Add(textBoxModelName, 0, 3);
-        modelInput.Controls.Add(buttonAddModel, 0, 4);
-        modelPanel.Controls.Add(modelInput, 1, 0);
-        pageModels.Controls.Add(modelPanel);
-        tab.TabPages.Add(pageModels);
-
-        var reasonPanel = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(10), ColumnCount = 2, RowCount = 2 };
-        listBoxDefectReasons = new ListBox { Dock = DockStyle.Fill };
-        reasonPanel.Controls.Add(listBoxDefectReasons, 0, 0);
-        var reasonInput = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(10) };
-        textBoxReasonName = new TextBox();
-        buttonAddReason = new Button { Text = "追加", Width = 100 };
-        reasonInput.Controls.Add(new Label { Text = "NG理由名" }, 0, 0);
-        reasonInput.Controls.Add(textBoxReasonName, 0, 1);
-        reasonInput.Controls.Add(buttonAddReason, 0, 2);
-        reasonPanel.Controls.Add(reasonInput, 1, 0);
-        pageReasons.Controls.Add(reasonPanel);
-        tab.TabPages.Add(pageReasons);
-
-        var actionPanel = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(10), ColumnCount = 2, RowCount = 2 };
-        listBoxActionTypes = new ListBox { Dock = DockStyle.Fill };
-        actionPanel.Controls.Add(listBoxActionTypes, 0, 0);
-        var actionInput = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(10) };
-        textBoxActionName = new TextBox();
-        buttonAddAction = new Button { Text = "追加", Width = 100 };
-        actionInput.Controls.Add(new Label { Text = "処置内容名" }, 0, 0);
-        actionInput.Controls.Add(textBoxActionName, 0, 1);
-        actionInput.Controls.Add(buttonAddAction, 0, 2);
-        actionPanel.Controls.Add(actionInput, 1, 0);
-        pageActions.Controls.Add(actionPanel);
-        tab.TabPages.Add(pageActions);
+        Controls.Add(root);
 
         buttonAddModel.Click += buttonAddModel_Click;
         buttonAddReason.Click += buttonAddReason_Click;
         buttonAddAction.Click += buttonAddAction_Click;
+    }
+
+    private TabPage CreateModelPage()
+    {
+        var page = new TabPage("型番");
+        var layout = CreatePageLayout(out listBoxModels, out var inputPanel);
+        textBoxModelCode = AddTextField(inputPanel, "型番コード");
+        textBoxModelName = AddTextField(inputPanel, "表示名");
+        buttonAddModel = AddButton(inputPanel, "型番を登録");
+        page.Controls.Add(layout);
+        return page;
+    }
+
+    private TabPage CreateSingleNamePage(string title, string label, out ListBox listBox, out TextBox textBox, out Button button)
+    {
+        var page = new TabPage(title);
+        var layout = CreatePageLayout(out listBox, out var inputPanel);
+        textBox = AddTextField(inputPanel, label);
+        button = AddButton(inputPanel, $"{title}を登録");
+        page.Controls.Add(layout);
+        return page;
+    }
+
+    private static TableLayoutPanel CreatePageLayout(out ListBox listBox, out TableLayoutPanel inputPanel)
+    {
+        var layout = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(12), ColumnCount = 2, RowCount = 1 };
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 58));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 42));
+
+        listBox = new ListBox { Dock = DockStyle.Fill, IntegralHeight = false };
+        layout.Controls.Add(listBox, 0, 0);
+
+        inputPanel = new TableLayoutPanel { Dock = DockStyle.Top, ColumnCount = 1, AutoSize = true, Padding = new Padding(12, 0, 0, 0) };
+        layout.Controls.Add(inputPanel, 1, 0);
+        return layout;
+    }
+
+    private static TextBox AddTextField(TableLayoutPanel panel, string label)
+    {
+        panel.Controls.Add(new Label { Text = label, AutoSize = true, Margin = new Padding(0, 0, 0, 3) });
+        var textBox = new TextBox { Dock = DockStyle.Top, Margin = new Padding(0, 0, 0, 12) };
+        panel.Controls.Add(textBox);
+        return textBox;
+    }
+
+    private static Button AddButton(TableLayoutPanel panel, string text)
+    {
+        var button = new Button { Text = text, AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(0, 0, 0, 8) };
+        panel.Controls.Add(button);
+        return button;
     }
 
     private ListBox listBoxModels = null!;

@@ -23,7 +23,7 @@ partial class AddInspectionHistoryForm
         table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35));
         table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65));
 
-        AddLabel(table, 0, "検査日時");
+        AddLabel(table, 0, "検査日");
         dateTimePickerInspection = new DateTimePicker { Format = DateTimePickerFormat.Custom, CustomFormat = "yyyy/MM/dd" };
         table.Controls.Add(dateTimePickerInspection, 1, 0);
 

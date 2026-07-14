@@ -319,7 +319,7 @@ public sealed class NgCaseService
         {
             var cases = SearchCases(criteria, includeClosed);
             using var writer = new StreamWriter(outputPath, false, new System.Text.UTF8Encoding(true));
-            writer.WriteLine("案件ID,状態,ロット番号,型番,初回NG日時,最新検査日時,最新NG理由,最新処置,NG回数,登録日時,クローズ日時");
+            writer.WriteLine("案件ID,状態,ロット番号,型番,初回NG日,最新検査日,最新NG理由,最新処置,NG回数,登録日,クローズ日");
             foreach (var item in cases)
             {
                 var ngCase = GetCase(item.Id);
@@ -330,13 +330,13 @@ public sealed class NgCaseService
                     EscapeCsv(item.Status.ToString()),
                     EscapeCsv(item.LotNumber),
                     EscapeCsv(item.ProductModelName),
-                    EscapeCsv(initialHistory?.InspectionDateTime.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty),
-                    EscapeCsv(latestHistory?.InspectionDateTime.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty),
+                    EscapeCsv(initialHistory?.InspectionDateTime.ToString("yyyy-MM-dd") ?? string.Empty),
+                    EscapeCsv(latestHistory?.InspectionDateTime.ToString("yyyy-MM-dd") ?? string.Empty),
                     EscapeCsv(latestHistory?.DefectReasonName ?? string.Empty),
                     EscapeCsv(latestHistory?.ActionTypeName ?? string.Empty),
                     EscapeCsv(item.InspectionHistoryCount.ToString()),
-                    EscapeCsv(item.RegisteredAt.ToString("yyyy-MM-dd HH:mm:ss")),
-                    EscapeCsv(item.ClosedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty)));
+                    EscapeCsv(item.RegisteredAt.ToString("yyyy-MM-dd")),
+                    EscapeCsv(item.ClosedAt?.ToString("yyyy-MM-dd") ?? string.Empty)));
             }
         }
         catch (Exception ex)
@@ -409,7 +409,7 @@ public sealed class NgCaseService
 
         if (request.InspectionDateTime == default)
         {
-            throw new InvalidOperationException("NG日時は必須です。", new InvalidOperationException());
+            throw new InvalidOperationException("NG日は必須です。", new InvalidOperationException());
         }
 
         if (request.Result == InspectionResult.Ng)

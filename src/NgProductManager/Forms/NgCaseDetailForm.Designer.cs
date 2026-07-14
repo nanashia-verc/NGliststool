@@ -35,11 +35,11 @@ partial class NgCaseDetailForm
         labelStatus = new Label { AutoSize = true };
         topPanel.Controls.Add(labelStatus, 1, 2);
 
-        AddLabel(topPanel, 3, "登録日時");
+        AddLabel(topPanel, 3, "登録日");
         labelRegisteredAt = new Label { AutoSize = true };
         topPanel.Controls.Add(labelRegisteredAt, 1, 3);
 
-        AddLabel(topPanel, 4, "クローズ日時");
+        AddLabel(topPanel, 4, "クローズ日");
         labelClosedAt = new Label { AutoSize = true };
         topPanel.Controls.Add(labelClosedAt, 1, 4);
 
@@ -61,7 +61,7 @@ partial class NgCaseDetailForm
 
         historyGrid = new DataGridView { Dock = DockStyle.Fill, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, ReadOnly = true, AllowUserToAddRows = false, AllowUserToDeleteRows = false };
         historyGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "回数", DataPropertyName = "Sequence", Width = 60 });
-        historyGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "検査日時", DataPropertyName = "InspectionDateTime", Width = 120 });
+        historyGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "検査日", DataPropertyName = "InspectionDateTime", Width = 100 });
         historyGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "結果", DataPropertyName = "Result", Width = 60 });
         historyGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "NG理由", DataPropertyName = "DefectReasonName", Width = 120 });
         historyGrid.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "詳細", DataPropertyName = "DefectDetails", Width = 180 });

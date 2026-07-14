@@ -6,82 +6,88 @@ partial class NewNgCaseForm
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing && (components != null))
+        if (disposing && components is not null)
         {
             components.Dispose();
         }
+
         base.Dispose(disposing);
     }
 
     private void InitializeComponent()
     {
-        this.Text = "新規NG登録";
-        this.ClientSize = new System.Drawing.Size(600, 520);
-        this.StartPosition = FormStartPosition.CenterParent;
+        Text = "新規NG登録";
+        ClientSize = new Size(620, 560);
+        MinimumSize = new Size(560, 500);
+        StartPosition = FormStartPosition.CenterParent;
 
-        var table = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(12), ColumnCount = 2, RowCount = 10 };
-        table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35));
-        table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65));
+        var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(14), ColumnCount = 2, RowCount = 12 };
+        root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 110));
+        root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        for (var row = 0; row < 10; row++) root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-        AddLabel(table, 0, "ロット番号*");
-        textBoxLotNumber = new TextBox();
-        table.Controls.Add(textBoxLotNumber, 1, 0);
+        textBoxLotNumber = AddTextBox(root, 0, "ロット番号*");
+        comboBoxModel = AddComboBox(root, 1, "型番*");
+        dateTimePickerInspection = new DateTimePicker { Format = DateTimePickerFormat.Custom, CustomFormat = "yyyy/MM/dd", Dock = DockStyle.Left, Width = 150 };
+        AddControl(root, 2, "NG日*", dateTimePickerInspection);
 
-        AddLabel(table, 1, "型番*");
-        comboBoxModel = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
-        table.Controls.Add(comboBoxModel, 1, 1);
+        var resultPanel = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Margin = new Padding(0, 3, 0, 3) };
+        radioButtonNg = new RadioButton { Text = "NG", Checked = true, AutoSize = true, Margin = new Padding(0, 3, 14, 3) };
+        radioButtonOk = new RadioButton { Text = "OK", AutoSize = true, Margin = new Padding(0, 3, 0, 3) };
+        resultPanel.Controls.AddRange([radioButtonNg, radioButtonOk]);
+        AddControl(root, 3, "結果*", resultPanel);
 
-        AddLabel(table, 2, "NG日時*");
-        dateTimePickerInspection = new DateTimePicker { Format = DateTimePickerFormat.Custom, CustomFormat = "yyyy/MM/dd" };
-        table.Controls.Add(dateTimePickerInspection, 1, 2);
+        comboBoxDefectReason = AddComboBox(root, 4, "NG理由*");
+        textBoxDefectDetail = AddMultilineTextBox(root, 5, "NG詳細", 58);
+        comboBoxAction = AddComboBox(root, 6, "処置内容*");
+        textBoxActionDetail = AddMultilineTextBox(root, 7, "処置詳細", 58);
+        textBoxInspectorName = AddTextBox(root, 8, "担当者");
+        textBoxNotes = AddMultilineTextBox(root, 9, "案件備考", 58);
 
-        AddLabel(table, 3, "結果");
-        var resultPanel = new FlowLayoutPanel { AutoSize = true };
-        radioButtonNg = new RadioButton { Text = "NG", Checked = true, AutoSize = true };
-        resultPanel.Controls.Add(radioButtonNg);
-        radioButtonOk = new RadioButton { Text = "OK", AutoSize = true };
-        resultPanel.Controls.Add(radioButtonOk);
-        table.Controls.Add(resultPanel, 1, 4);
+        var help = new Label { Text = "* は必須項目です。型番・NG理由・処置内容はマスター管理から登録できます。", AutoSize = true, ForeColor = SystemColors.GrayText, Margin = new Padding(0, 6, 0, 3) };
+        root.SetColumnSpan(help, 2);
+        root.Controls.Add(help, 0, 10);
 
-        AddLabel(table, 4, "NG理由*");
-        comboBoxDefectReason = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
-        table.Controls.Add(comboBoxDefectReason, 1, 4);
-
-        AddLabel(table, 5, "NG詳細");
-        textBoxDefectDetail = new TextBox { Multiline = true, Height = 60 };
-        table.Controls.Add(textBoxDefectDetail, 1, 5);
-
-        AddLabel(table, 6, "処置");
-        comboBoxAction = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
-        table.Controls.Add(comboBoxAction, 1, 6);
-
-        AddLabel(table, 7, "処置詳細");
-        textBoxActionDetail = new TextBox { Multiline = true, Height = 60 };
-        table.Controls.Add(textBoxActionDetail, 1, 7);
-
-        AddLabel(table, 8, "担当者");
-        textBoxInspectorName = new TextBox();
-        table.Controls.Add(textBoxInspectorName, 1, 8);
-
-        AddLabel(table, 9, "案件備考");
-        textBoxNotes = new TextBox { Multiline = true, Height = 60 };
-        table.Controls.Add(textBoxNotes, 1, 9);
-
-        var buttonPanel = new FlowLayoutPanel { Dock = DockStyle.Bottom, AutoSize = true, Padding = new Padding(0, 10, 0, 0) };
-        buttonSave = new Button { Text = "登録", Width = 100 };
-        buttonPanel.Controls.Add(buttonSave);
+        var buttons = new FlowLayoutPanel { AutoSize = true, FlowDirection = FlowDirection.RightToLeft, Dock = DockStyle.Fill, Margin = new Padding(0, 8, 0, 0) };
         buttonCancel = new Button { Text = "キャンセル", Width = 100 };
-        buttonPanel.Controls.Add(buttonCancel);
-        this.Controls.Add(buttonPanel);
-        this.Controls.Add(table);
+        buttonSave = new Button { Text = "登録", Width = 100 };
+        buttons.Controls.AddRange([buttonCancel, buttonSave]);
+        root.SetColumnSpan(buttons, 2);
+        root.Controls.Add(buttons, 0, 11);
+        Controls.Add(root);
 
         buttonSave.Click += buttonSave_Click;
         buttonCancel.Click += (s, e) => Close();
     }
 
-    private static void AddLabel(TableLayoutPanel table, int row, string text)
+    private static TextBox AddTextBox(TableLayoutPanel table, int row, string label)
     {
-        table.Controls.Add(new Label { Text = text, AutoSize = true, Margin = new Padding(0, 5, 0, 0) }, 0, row);
+        var textBox = new TextBox { Dock = DockStyle.Top };
+        AddControl(table, row, label, textBox);
+        return textBox;
+    }
+
+    private static ComboBox AddComboBox(TableLayoutPanel table, int row, string label)
+    {
+        var comboBox = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Dock = DockStyle.Top };
+        AddControl(table, row, label, comboBox);
+        return comboBox;
+    }
+
+    private static TextBox AddMultilineTextBox(TableLayoutPanel table, int row, string label, int height)
+    {
+        var textBox = new TextBox { Multiline = true, Height = height, Dock = DockStyle.Top, ScrollBars = ScrollBars.Vertical };
+        AddControl(table, row, label, textBox);
+        return textBox;
+    }
+
+    private static void AddControl(TableLayoutPanel table, int row, string label, Control control)
+    {
+        table.Controls.Add(new Label { Text = label, AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(0, 6, 8, 3) }, 0, row);
+        control.Margin = new Padding(0, 3, 0, 3);
+        table.Controls.Add(control, 1, row);
     }
 
     private TextBox textBoxLotNumber = null!;

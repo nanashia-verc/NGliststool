@@ -1,5 +1,6 @@
 using NgProductManager.Models;
 using NgProductManager.Services;
+using NgProductManager.Utilities;
 
 namespace NgProductManager.Forms;
 
@@ -51,9 +52,9 @@ public partial class AddInspectionHistoryForm : Form
             {
                 InspectionDateTime = dateTimePickerInspection.Value.Date,
                 Result = radioButtonNg.Checked ? InspectionResult.Ng : InspectionResult.Ok,
-                DefectReasonId = ((ComboBoxItem<int>)comboBoxDefectReason.SelectedItem!).Value,
+                DefectReasonId = radioButtonNg.Checked ? ((ComboBoxItem<int>)comboBoxDefectReason.SelectedItem!).Value : null,
                 DefectDetails = textBoxDefectDetails.Text,
-                ActionTypeId = ((ComboBoxItem<int>)comboBoxAction.SelectedItem!).Value,
+                ActionTypeId = radioButtonNg.Checked ? ((ComboBoxItem<int>)comboBoxAction.SelectedItem!).Value : null,
                 ActionDetails = textBoxActionDetails.Text,
                 InspectorName = textBoxInspectorName.Text,
                 NextStatus = radioButtonPending.Checked ? NgCaseStatus.PendingReinspection : NgCaseStatus.InProgress
@@ -67,8 +68,9 @@ public partial class AddInspectionHistoryForm : Form
         {
             MessageBox.Show(this, ex.Message, "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            AppLogger.WriteError("再検査結果の保存に失敗しました。", ex);
             MessageBox.Show(this, "保存に失敗しました。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
