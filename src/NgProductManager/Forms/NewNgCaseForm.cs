@@ -37,20 +37,38 @@ public partial class NewNgCaseForm : Form
 
     private void buttonSave_Click(object sender, EventArgs e)
     {
+        if (comboBoxModel.SelectedItem is null)
+        {
+            MessageBox.Show(this, "型番を選択してください。マスター管理から登録してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        if (radioButtonNg.Checked && comboBoxDefectReason.SelectedItem is null)
+        {
+            MessageBox.Show(this, "NG理由を選択してください。マスター管理から登録してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        if (radioButtonNg.Checked && comboBoxAction.SelectedItem is null)
+        {
+            MessageBox.Show(this, "処置内容を選択してください。マスター管理から登録してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
         try
         {
+            var inspectionDate = dateTimePickerInspection.Value.Date;
             var request = new CreateCaseRequest
             {
                 LotNumber = textBoxLotNumber.Text,
-                ProductModelId = ((ComboBoxItem<int>)comboBoxModel.SelectedItem!).Value,
-                SerialNumber = textBoxSerialNumber.Text,
-                RegisteredAt = dateTimePickerInspection.Value,
+                ProductModelId = ((ComboBoxItem<int>)comboBoxModel.SelectedItem).Value,
+                RegisteredAt = inspectionDate,
                 Notes = textBoxNotes.Text,
-                InspectionDateTime = dateTimePickerInspection.Value,
+                InspectionDateTime = inspectionDate,
                 Result = radioButtonNg.Checked ? InspectionResult.Ng : InspectionResult.Ok,
-                DefectReasonId = ((ComboBoxItem<int>)comboBoxDefectReason.SelectedItem!).Value,
+                DefectReasonId = radioButtonNg.Checked ? ((ComboBoxItem<int>)comboBoxDefectReason.SelectedItem!).Value : null,
                 DefectDetails = textBoxDefectDetail.Text,
-                ActionTypeId = ((ComboBoxItem<int>)comboBoxAction.SelectedItem!).Value,
+                ActionTypeId = radioButtonNg.Checked ? ((ComboBoxItem<int>)comboBoxAction.SelectedItem!).Value : null,
                 ActionDetails = textBoxActionDetail.Text,
                 InspectorName = textBoxInspectorName.Text
             };
@@ -63,7 +81,7 @@ public partial class NewNgCaseForm : Form
         {
             MessageBox.Show(this, ex.Message, "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             MessageBox.Show(this, "保存に失敗しました。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }

@@ -16,10 +16,17 @@ partial class MasterManagementForm
     private void InitializeComponent()
     {
         this.Text = "マスター管理";
-        this.ClientSize = new System.Drawing.Size(900, 600);
+        this.ClientSize = new System.Drawing.Size(900, 560);
         this.StartPosition = FormStartPosition.CenterParent;
 
+        var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(10), RowCount = 2, ColumnCount = 1 };
+        root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        root.Controls.Add(new Label { Text = "登録したマスターは新規NG登録画面ですぐに使えます。", AutoSize = true, Margin = new Padding(0, 0, 0, 6) }, 0, 0);
+
         var tab = new TabControl { Dock = DockStyle.Fill };
+        root.Controls.Add(tab, 0, 1);
+        this.Controls.Add(root);
         var pageModels = new TabPage("型番");
         var pageReasons = new TabPage("NG理由");
         var pageActions = new TabPage("処置内容");
@@ -67,7 +74,6 @@ partial class MasterManagementForm
         pageActions.Controls.Add(actionPanel);
         tab.TabPages.Add(pageActions);
 
-        this.Controls.Add(tab);
         buttonAddModel.Click += buttonAddModel_Click;
         buttonAddReason.Click += buttonAddReason_Click;
         buttonAddAction.Click += buttonAddAction_Click;

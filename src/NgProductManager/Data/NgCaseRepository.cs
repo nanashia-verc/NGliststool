@@ -497,7 +497,7 @@ WHERE 1 = 1";
 
             if (!string.IsNullOrWhiteSpace(criteria.FreeText))
             {
-                sql += " AND (ng.LotNumber LIKE @FreeText OR pm.DisplayName LIKE @FreeText OR ng.SerialNumber LIKE @FreeText OR ng.Notes LIKE @FreeText)";
+                sql += " AND (ng.LotNumber LIKE @FreeText OR pm.DisplayName LIKE @FreeText OR ng.Notes LIKE @FreeText)";
                 command.Parameters.AddWithValue("@FreeText", $"%{criteria.FreeText}%");
             }
 

@@ -107,6 +107,25 @@ public class NgCaseServiceTests
     }
 
     [TestMethod]
+    public void CreateInitialCase_RejectsUnknownMastersWithHelpfulMessage()
+    {
+        var service = new NgCaseService(_databasePath);
+        var ex = Assert.ThrowsException<InvalidOperationException>(() => service.CreateCaseWithInitialInspection(new CreateCaseRequest
+        {
+            LotNumber = "LOT-100",
+            ProductModelId = 999,
+            RegisteredAt = new DateTime(2024, 1, 10),
+            InspectionDateTime = new DateTime(2024, 1, 10, 10, 0, 0),
+            Result = InspectionResult.Ng,
+            DefectReasonId = 999,
+            ActionTypeId = 999,
+            InspectorName = "鈴木"
+        }));
+
+        StringAssert.Contains(ex.Message, "型番マスター");
+    }
+
+    [TestMethod]
     public void AddReinspectionHistory_AppendsHistoryWithoutEditingPreviousOnes()
     {
         var service = new NgCaseService(_databasePath);

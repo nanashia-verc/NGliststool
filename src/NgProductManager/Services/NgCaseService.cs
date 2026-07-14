@@ -167,10 +167,7 @@ public sealed class NgCaseService
             throw new InvalidOperationException("対象案件が見つかりません。", new InvalidOperationException());
         }
 
-        if (input.Result == InspectionResult.Ng && input.DefectReasonId is null)
-        {
-            throw new InvalidOperationException("NG理由を入力してください。", new InvalidOperationException());
-        }
+        ValidateInspectionHistoryInput(input);
 
         try
         {
@@ -322,7 +319,7 @@ public sealed class NgCaseService
         {
             var cases = SearchCases(criteria, includeClosed);
             using var writer = new StreamWriter(outputPath, false, new System.Text.UTF8Encoding(true));
-            writer.WriteLine("案件ID,状態,ロット番号,型番,管理番号,初回NG日時,最新検査日時,最新NG理由,最新処置,NG回数,登録日時,クローズ日時");
+            writer.WriteLine("案件ID,状態,ロット番号,型番,初回NG日時,最新検査日時,最新NG理由,最新処置,NG回数,登録日時,クローズ日時");
             foreach (var item in cases)
             {
                 var ngCase = GetCase(item.Id);
@@ -333,7 +330,6 @@ public sealed class NgCaseService
                     EscapeCsv(item.Status.ToString()),
                     EscapeCsv(item.LotNumber),
                     EscapeCsv(item.ProductModelName),
-                    EscapeCsv(item.SerialNumber ?? string.Empty),
                     EscapeCsv(initialHistory?.InspectionDateTime.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty),
                     EscapeCsv(latestHistory?.InspectionDateTime.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty),
                     EscapeCsv(latestHistory?.DefectReasonName ?? string.Empty),
@@ -394,7 +390,7 @@ public sealed class NgCaseService
         }
     }
 
-    private static void ValidateCreateCaseRequest(CreateCaseRequest request)
+    private void ValidateCreateCaseRequest(CreateCaseRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.LotNumber))
         {
@@ -403,7 +399,12 @@ public sealed class NgCaseService
 
         if (request.ProductModelId <= 0)
         {
-            throw new InvalidOperationException("型番を選択してください。", new InvalidOperationException());
+            throw new InvalidOperationException("型番を選択してください。マスター管理から登録してください。", new InvalidOperationException());
+        }
+
+        if (!_repository.GetProductModels(activeOnly: true).Any(x => x.Id == request.ProductModelId))
+        {
+            throw new InvalidOperationException("型番マスターが見つかりません。マスター管理から登録してください。", new InvalidOperationException());
         }
 
         if (request.InspectionDateTime == default)
@@ -411,9 +412,33 @@ public sealed class NgCaseService
             throw new InvalidOperationException("NG日時は必須です。", new InvalidOperationException());
         }
 
-        if (request.Result == InspectionResult.Ng && request.DefectReasonId is null)
+        if (request.Result == InspectionResult.Ng)
         {
-            throw new InvalidOperationException("NG理由を入力してください。", new InvalidOperationException());
+            if (request.DefectReasonId is null || !_repository.GetDefectReasons(activeOnly: true).Any(x => x.Id == request.DefectReasonId.Value))
+            {
+                throw new InvalidOperationException("NG理由を選択してください。マスター管理から登録してください。", new InvalidOperationException());
+            }
+
+            if (request.ActionTypeId is null || !_repository.GetActionTypes(activeOnly: true).Any(x => x.Id == request.ActionTypeId.Value))
+            {
+                throw new InvalidOperationException("処置内容を選択してください。マスター管理から登録してください。", new InvalidOperationException());
+            }
+        }
+    }
+
+    private void ValidateInspectionHistoryInput(InspectionHistoryInput input)
+    {
+        if (input.Result == InspectionResult.Ng)
+        {
+            if (input.DefectReasonId is null || !_repository.GetDefectReasons(activeOnly: true).Any(x => x.Id == input.DefectReasonId.Value))
+            {
+                throw new InvalidOperationException("NG理由を選択してください。マスター管理から登録してください。", new InvalidOperationException());
+            }
+
+            if (input.ActionTypeId is null || !_repository.GetActionTypes(activeOnly: true).Any(x => x.Id == input.ActionTypeId.Value))
+            {
+                throw new InvalidOperationException("処置内容を選択してください。マスター管理から登録してください。", new InvalidOperationException());
+            }
         }
     }
 }

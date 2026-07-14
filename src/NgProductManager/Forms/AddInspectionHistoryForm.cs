@@ -33,11 +33,23 @@ public partial class AddInspectionHistoryForm : Form
 
     private void buttonSave_Click(object sender, EventArgs e)
     {
+        if (radioButtonNg.Checked && comboBoxDefectReason.SelectedItem is null)
+        {
+            MessageBox.Show(this, "NG理由を選択してください。マスター管理から登録してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        if (radioButtonNg.Checked && comboBoxAction.SelectedItem is null)
+        {
+            MessageBox.Show(this, "処置内容を選択してください。マスター管理から登録してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
         try
         {
             var input = new InspectionHistoryInput
             {
-                InspectionDateTime = dateTimePickerInspection.Value,
+                InspectionDateTime = dateTimePickerInspection.Value.Date,
                 Result = radioButtonNg.Checked ? InspectionResult.Ng : InspectionResult.Ok,
                 DefectReasonId = ((ComboBoxItem<int>)comboBoxDefectReason.SelectedItem!).Value,
                 DefectDetails = textBoxDefectDetails.Text,
@@ -55,7 +67,7 @@ public partial class AddInspectionHistoryForm : Form
         {
             MessageBox.Show(this, ex.Message, "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             MessageBox.Show(this, "保存に失敗しました。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }

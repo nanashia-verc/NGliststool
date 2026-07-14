@@ -26,7 +26,6 @@ public partial class NgCaseDetailForm : Form
 
         labelLotNumber.Text = detail.LotNumber;
         labelProductModel.Text = detail.ProductModelName;
-        labelSerialNumber.Text = detail.SerialNumber ?? string.Empty;
         labelStatus.Text = detail.Status switch
         {
             NgCaseStatus.InProgress => "対応中",

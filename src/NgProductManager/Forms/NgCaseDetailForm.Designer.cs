@@ -19,7 +19,7 @@ partial class NgCaseDetailForm
         this.ClientSize = new System.Drawing.Size(1000, 700);
         this.StartPosition = FormStartPosition.CenterParent;
 
-        var topPanel = new TableLayoutPanel { Dock = DockStyle.Top, Padding = new Padding(12), AutoSize = true, ColumnCount = 2, RowCount = 6 };
+        var topPanel = new TableLayoutPanel { Dock = DockStyle.Top, Padding = new Padding(12), AutoSize = true, ColumnCount = 2, RowCount = 5 };
         topPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25));
         topPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 75));
 
@@ -31,21 +31,17 @@ partial class NgCaseDetailForm
         labelProductModel = new Label { AutoSize = true };
         topPanel.Controls.Add(labelProductModel, 1, 1);
 
-        AddLabel(topPanel, 2, "管理番号");
-        labelSerialNumber = new Label { AutoSize = true };
-        topPanel.Controls.Add(labelSerialNumber, 1, 2);
-
-        AddLabel(topPanel, 3, "状態");
+        AddLabel(topPanel, 2, "状態");
         labelStatus = new Label { AutoSize = true };
-        topPanel.Controls.Add(labelStatus, 1, 3);
+        topPanel.Controls.Add(labelStatus, 1, 2);
 
-        AddLabel(topPanel, 4, "登録日時");
+        AddLabel(topPanel, 3, "登録日時");
         labelRegisteredAt = new Label { AutoSize = true };
-        topPanel.Controls.Add(labelRegisteredAt, 1, 4);
+        topPanel.Controls.Add(labelRegisteredAt, 1, 3);
 
-        AddLabel(topPanel, 5, "クローズ日時");
+        AddLabel(topPanel, 4, "クローズ日時");
         labelClosedAt = new Label { AutoSize = true };
-        topPanel.Controls.Add(labelClosedAt, 1, 5);
+        topPanel.Controls.Add(labelClosedAt, 1, 4);
 
         this.Controls.Add(topPanel);
 
@@ -89,7 +85,6 @@ partial class NgCaseDetailForm
 
     private Label labelLotNumber = null!;
     private Label labelProductModel = null!;
-    private Label labelSerialNumber = null!;
     private Label labelStatus = null!;
     private Label labelRegisteredAt = null!;
     private Label labelClosedAt = null!;

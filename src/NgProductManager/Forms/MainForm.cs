@@ -36,7 +36,6 @@ public partial class MainForm : Form
             new DataGridViewTextBoxColumn { DataPropertyName = "StatusText", HeaderText = "状態", Width = 90 },
             new DataGridViewTextBoxColumn { DataPropertyName = "LotNumber", HeaderText = "ロット番号", Width = 100 },
             new DataGridViewTextBoxColumn { DataPropertyName = "ProductModelName", HeaderText = "型番", Width = 100 },
-            new DataGridViewTextBoxColumn { DataPropertyName = "SerialNumber", HeaderText = "管理番号", Width = 100 },
             new DataGridViewTextBoxColumn { DataPropertyName = "RegisteredAtText", HeaderText = "初回NG日時", Width = 120 },
             new DataGridViewTextBoxColumn { DataPropertyName = "LatestInspectionDateTimeText", HeaderText = "最新検査日時", Width = 120 },
             new DataGridViewTextBoxColumn { DataPropertyName = "LatestDefectReasonName", HeaderText = "最新NG理由", Width = 120 },
@@ -241,7 +240,6 @@ public partial class MainForm : Form
             };
             LotNumber = item.LotNumber;
             ProductModelName = item.ProductModelName;
-            SerialNumber = item.SerialNumber;
             RegisteredAtText = item.RegisteredAt.ToString("yyyy/MM/dd HH:mm");
             LatestInspectionDateTimeText = item.LatestInspectionDateTime?.ToString("yyyy/MM/dd HH:mm") ?? string.Empty;
             LatestDefectReasonName = item.LatestDefectReasonName;
@@ -254,7 +252,6 @@ public partial class MainForm : Form
         public string StatusText { get; }
         public string LotNumber { get; }
         public string ProductModelName { get; }
-        public string? SerialNumber { get; }
         public string RegisteredAtText { get; }
         public string LatestInspectionDateTimeText { get; }
         public string? LatestDefectReasonName { get; }
