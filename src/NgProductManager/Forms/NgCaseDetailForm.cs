@@ -41,7 +41,7 @@ public partial class NgCaseDetailForm : Form
         var rows = detail.InspectionHistories
             .OrderByDescending(history => history.InspectionDateTime)
             .ThenByDescending(history => history.Id)
-            .Select((history, index) => new InspectionRowViewModel(index + 1, index == 0, history))
+            .Select((history, index) => new InspectionRowViewModel(index == 0, history))
             .ToList();
         bindingSource.DataSource = rows;
         historyGrid.ClearSelection();
@@ -139,10 +139,9 @@ public partial class NgCaseDetailForm : Form
 
     private sealed class InspectionRowViewModel
     {
-        public InspectionRowViewModel(int sequence, bool isCurrent, InspectionHistoryDetail history)
+        public InspectionRowViewModel(bool isCurrent, InspectionHistoryDetail history)
         {
             Id = history.Id;
-            Sequence = sequence;
             CurrentState = isCurrent ? "● 現在" : string.Empty;
             InspectionDateTime = history.InspectionDateTime.ToString("yyyy/MM/dd");
             Result = history.Result == InspectionResult.Ng ? "NG" : "OK";
@@ -155,7 +154,6 @@ public partial class NgCaseDetailForm : Form
 
         public int Id { get; }
 
-        public int Sequence { get; }
         public string CurrentState { get; }
         public string InspectionDateTime { get; }
         public string Result { get; }

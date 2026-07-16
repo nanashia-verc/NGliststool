@@ -81,6 +81,37 @@ public class NgCaseServiceTests
         Assert.AreEqual(1, caseDetail!.InspectionHistories.Count);
         Assert.AreEqual(NgCaseStatus.InProgress, caseDetail.Status);
         Assert.AreEqual("LOT-001", caseDetail.LotNumber);
+        Assert.AreEqual("寸法不良", caseDetail.InspectionHistories[0].DefectReasonName);
+    }
+
+    [TestMethod]
+    public void RestoreBackup_ReplacesCurrentDataWithBackupContents()
+    {
+        var service = new NgCaseService(_databasePath);
+        var modelId = service.CreateProductModel("M-BACKUP", "復元対象型番");
+        var reasonId = service.CreateDefectReason("復元対象理由");
+        service.CreateCaseWithInitialInspection(new CreateCaseRequest
+        {
+            LotNumber = "LOT-BACKUP", ProductModelId = modelId, RegisteredAt = new DateTime(2026, 7, 16),
+            InspectionDateTime = new DateTime(2026, 7, 16), Result = InspectionResult.Ng, DefectReasonId = reasonId
+        });
+        var backupPath = Path.Combine(Path.GetTempPath(), $"ng-manager-backup-{Guid.NewGuid():N}.db");
+
+        try
+        {
+            service.CreateBackup(backupPath);
+            service.CreateProductModel("M-AFTER", "復元後に消える型番");
+
+            service.RestoreBackup(backupPath);
+
+            Assert.AreEqual(1, service.SearchCases(new NgCaseSearchCriteria(), includeClosed: true).Count);
+            Assert.AreEqual("復元対象理由", service.GetCase(1)!.InspectionHistories[0].DefectReasonName);
+            Assert.IsFalse(service.GetActiveProductModels().Any(model => model.DisplayName == "復元後に消える型番"));
+        }
+        finally
+        {
+            if (File.Exists(backupPath)) File.Delete(backupPath);
+        }
     }
 
     [TestMethod]

@@ -214,6 +214,30 @@ public partial class MainForm : Form
         }
     }
 
+    private void buttonRestore_Click(object sender, EventArgs e)
+    {
+        using var dialog = new OpenFileDialog
+        {
+            Filter = "バックアップファイル (*.db)|*.db|すべてのファイル (*.*)|*.*",
+            InitialDirectory = Directory.Exists(ApplicationPaths.BackupDirectory) ? ApplicationPaths.BackupDirectory : null
+        };
+        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+
+        if (MessageBox.Show(this, "現在のデータは選択したバックアップで置き換えられます。\n復元前に現在のデータをバックアップすることをおすすめします。\n復元しますか？", "復元確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+
+        try
+        {
+            _service.RestoreBackup(dialog.FileName);
+            LoadCases();
+            MessageBox.Show(this, "バックアップを復元しました。", "完了", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        catch (Exception ex)
+        {
+            AppLogger.WriteError("バックアップの復元に失敗しました。", ex);
+            MessageBox.Show(this, ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
     private void dataGridViewCases_DoubleClick(object sender, EventArgs e)
     {
         if (dataGridViewCases.CurrentRow?.DataBoundItem is NgCaseRowViewModel row)

@@ -413,6 +413,41 @@ public sealed class NgCaseService
         }
     }
 
+    public void RestoreBackup(string backupPath)
+    {
+        if (string.IsNullOrWhiteSpace(backupPath) || !File.Exists(backupPath))
+        {
+            throw new InvalidOperationException("復元するバックアップファイルが見つかりません。");
+        }
+
+        if (string.Equals(Path.GetFullPath(backupPath), Path.GetFullPath(_databasePath), StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("現在使用中のデータベースは復元元に選択できません。");
+        }
+
+        try
+        {
+            using var source = new SqliteConnection($"Data Source={backupPath}");
+            source.Open();
+            using var validation = source.CreateCommand();
+            validation.CommandText = "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'NgCases';";
+            if (validation.ExecuteScalar() is null)
+            {
+                throw new InvalidOperationException("NG品管理ツールのバックアップファイルではありません。");
+            }
+
+            SqliteConnection.ClearAllPools();
+            using var destination = new SqliteConnection($"Data Source={_databasePath}");
+            destination.Open();
+            source.BackupDatabase(destination);
+        }
+        catch (Exception ex) when (ex is not InvalidOperationException)
+        {
+            AppLogger.WriteError("バックアップの復元に失敗しました。", ex);
+            throw new InvalidOperationException("バックアップの復元に失敗しました。", ex);
+        }
+    }
+
     public void ExportCsv(NgCaseSearchCriteria criteria, string outputPath, bool includeClosed = false)
     {
         try

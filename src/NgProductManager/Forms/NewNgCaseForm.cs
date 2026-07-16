@@ -52,6 +52,7 @@ public partial class NewNgCaseForm : Form
 
     private void buttonSave_Click(object sender, EventArgs e)
     {
+        var inspectionResult = radioButtonOk.Checked ? InspectionResult.Ok : InspectionResult.Ng;
         if (string.IsNullOrWhiteSpace(comboBoxLotNumber.Text))
         {
             MessageBox.Show(this, "ロット番号を入力してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -64,7 +65,7 @@ public partial class NewNgCaseForm : Form
             return;
         }
 
-        if (radioButtonNg.Checked && string.IsNullOrWhiteSpace(comboBoxDefectReason.Text))
+        if (inspectionResult == InspectionResult.Ng && string.IsNullOrWhiteSpace(comboBoxDefectReason.Text))
         {
             MessageBox.Show(this, "NG理由を選択してください。マスター管理から登録してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
@@ -81,7 +82,7 @@ public partial class NewNgCaseForm : Form
             var inspectionDate = dateTimePickerInspection.Value.Date;
             var modelId = ResolveModel();
             var processId = ResolveProcess();
-            var reasonId = radioButtonNg.Checked ? ResolveReason() : null;
+            var reasonId = inspectionResult == InspectionResult.Ng ? ResolveReason() : null;
             var actionId = ResolveAction();
             var request = new CreateCaseRequest
             {
@@ -91,7 +92,7 @@ public partial class NewNgCaseForm : Form
                 RegisteredAt = inspectionDate,
                 Notes = textBoxNotes.Text,
                 InspectionDateTime = inspectionDate,
-                Result = radioButtonNg.Checked ? InspectionResult.Ng : InspectionResult.Ok,
+                Result = inspectionResult,
                 DefectReasonId = reasonId,
                 DefectDetails = textBoxDefectDetail.Text,
                 ActionTypeId = actionId,

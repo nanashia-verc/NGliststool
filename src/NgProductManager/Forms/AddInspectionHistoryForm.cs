@@ -37,7 +37,8 @@ public partial class AddInspectionHistoryForm : Form
 
     private void buttonSave_Click(object sender, EventArgs e)
     {
-        if (radioButtonNg.Checked && string.IsNullOrWhiteSpace(comboBoxDefectReason.Text))
+        var inspectionResult = radioButtonOk.Checked ? InspectionResult.Ok : InspectionResult.Ng;
+        if (inspectionResult == InspectionResult.Ng && string.IsNullOrWhiteSpace(comboBoxDefectReason.Text))
         {
             MessageBox.Show(this, "NG理由を選択してください。マスター管理から登録してください。", "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
@@ -48,10 +49,10 @@ public partial class AddInspectionHistoryForm : Form
             var input = new InspectionHistoryInput
             {
                 InspectionDateTime = dateTimePickerInspection.Value.Date,
-                Result = radioButtonNg.Checked ? InspectionResult.Ng : InspectionResult.Ok,
-                DefectReasonId = radioButtonNg.Checked ? ResolveReason() : null,
+                Result = inspectionResult,
+                DefectReasonId = inspectionResult == InspectionResult.Ng ? ResolveReason() : null,
                 DefectDetails = textBoxDefectDetails.Text,
-                ActionTypeId = radioButtonNg.Checked ? ResolveAction() : null,
+                ActionTypeId = inspectionResult == InspectionResult.Ng ? ResolveAction() : null,
                 ActionDetails = textBoxActionDetails.Text,
                 InspectorName = textBoxInspectorName.Text,
                 NextStatus = radioButtonPending.Checked ? NgCaseStatus.PendingReinspection : NgCaseStatus.InProgress
