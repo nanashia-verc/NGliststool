@@ -82,7 +82,7 @@ public partial class NewNgCaseForm : Form
             var inspectionDate = dateTimePickerInspection.Value.Date;
             var modelId = ResolveModel();
             var processId = ResolveProcess();
-            var reasonId = inspectionResult == InspectionResult.Ng ? ResolveReason() : null;
+            var reasonId = ResolveOptionalReason();
             var actionId = ResolveAction();
             var request = new CreateCaseRequest
             {
@@ -122,7 +122,7 @@ public partial class NewNgCaseForm : Form
 
     private int ResolveModel() => comboBoxModel.SelectedItem is ComboBoxItem<int> item ? item.Value : _service.CreateProductModel(comboBoxModel.Text.Trim(), comboBoxModel.Text.Trim());
     private int ResolveProcess() => comboBoxProcess.SelectedItem is ComboBoxItem<int> item ? item.Value : _service.CreateProcess(comboBoxProcess.Text.Trim());
-    private int? ResolveReason() => comboBoxDefectReason.SelectedItem is ComboBoxItem<int> item ? item.Value : _service.CreateDefectReason(comboBoxDefectReason.Text.Trim());
+    private int? ResolveOptionalReason() => string.IsNullOrWhiteSpace(comboBoxDefectReason.Text) ? null : comboBoxDefectReason.SelectedItem is ComboBoxItem<int> item ? item.Value : _service.CreateDefectReason(comboBoxDefectReason.Text.Trim());
     private int? ResolveAction() => string.IsNullOrWhiteSpace(comboBoxAction.Text) ? null : comboBoxAction.SelectedItem is ComboBoxItem<int> item ? item.Value : _service.CreateActionType(comboBoxAction.Text.Trim());
 
     private void LoadCaseForEdit(int caseId)

@@ -50,9 +50,9 @@ public partial class AddInspectionHistoryForm : Form
             {
                 InspectionDateTime = dateTimePickerInspection.Value.Date,
                 Result = inspectionResult,
-                DefectReasonId = inspectionResult == InspectionResult.Ng ? ResolveReason() : null,
+                DefectReasonId = ResolveOptionalReason(),
                 DefectDetails = textBoxDefectDetails.Text,
-                ActionTypeId = inspectionResult == InspectionResult.Ng ? ResolveAction() : null,
+                ActionTypeId = ResolveOptionalAction(),
                 ActionDetails = textBoxActionDetails.Text,
                 InspectorName = textBoxInspectorName.Text,
                 NextStatus = radioButtonPending.Checked ? NgCaseStatus.PendingReinspection : NgCaseStatus.InProgress
@@ -80,8 +80,8 @@ public partial class AddInspectionHistoryForm : Form
         }
     }
 
-    private int ResolveReason() => comboBoxDefectReason.SelectedItem is ComboBoxItem<int> item ? item.Value : _service.CreateDefectReason(comboBoxDefectReason.Text.Trim());
-    private int ResolveAction() => comboBoxAction.SelectedItem is ComboBoxItem<int> item ? item.Value : _service.CreateActionType(comboBoxAction.Text.Trim());
+    private int? ResolveOptionalReason() => string.IsNullOrWhiteSpace(comboBoxDefectReason.Text) ? null : comboBoxDefectReason.SelectedItem is ComboBoxItem<int> item ? item.Value : _service.CreateDefectReason(comboBoxDefectReason.Text.Trim());
+    private int? ResolveOptionalAction() => string.IsNullOrWhiteSpace(comboBoxAction.Text) ? null : comboBoxAction.SelectedItem is ComboBoxItem<int> item ? item.Value : _service.CreateActionType(comboBoxAction.Text.Trim());
 
     private void LoadHistoryForEdit(int historyId)
     {

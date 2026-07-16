@@ -230,6 +230,32 @@ public class NgCaseServiceTests
     }
 
     [TestMethod]
+    public void AddReinspectionHistory_PreservesReasonAndActionForOkResult()
+    {
+        var service = new NgCaseService(_databasePath);
+        var modelId = service.CreateProductModel("M-OK-REASON", "OK結果型番");
+        var reasonId = service.CreateDefectReason("再検査時の理由");
+        var actionId = service.CreateActionType("再検査時の処置");
+        var caseId = service.CreateCaseWithInitialInspection(new CreateCaseRequest
+        {
+            LotNumber = "LOT-OK-REASON", ProductModelId = modelId, RegisteredAt = new DateTime(2026, 7, 16),
+            InspectionDateTime = new DateTime(2026, 7, 16), Result = InspectionResult.Ng, DefectReasonId = reasonId
+        });
+
+        service.AddInspectionHistory(caseId, new InspectionHistoryInput
+        {
+            InspectionDateTime = new DateTime(2026, 7, 17), Result = InspectionResult.Ok,
+            DefectReasonId = reasonId, ActionTypeId = actionId, DefectDetails = "再発なし", ActionDetails = "確認済み",
+            NextStatus = NgCaseStatus.InProgress
+        });
+
+        var latestHistory = service.GetCase(caseId)!.InspectionHistories.Last();
+        Assert.AreEqual(InspectionResult.Ok, latestHistory.Result);
+        Assert.AreEqual("再検査時の理由", latestHistory.DefectReasonName);
+        Assert.AreEqual("再検査時の処置", latestHistory.ActionTypeName);
+    }
+
+    [TestMethod]
     public void AddReinspectionHistory_AppendsHistoryWithoutEditingPreviousOnes()
     {
         var service = new NgCaseService(_databasePath);
