@@ -47,8 +47,6 @@ public partial class MainForm : Form
         _bindingSource.DataSource = new List<NgCaseListItem>();
         dataGridViewCases.DataSource = _bindingSource;
 
-        comboBoxStatus.Items.AddRange(new object[] { "すべて", "対応中", "再検査待ち", "クローズ済み" });
-        comboBoxStatus.SelectedIndex = 0;
     }
 
     private void LoadCases()
@@ -60,12 +58,10 @@ public partial class MainForm : Form
                 FreeText = textBoxFreeText.Text.Trim(),
                 LotNumber = textBoxLotNumber.Text.Trim(),
                 ProductModel = textBoxProductModel.Text.Trim(),
-                Status = ResolveStatus(comboBoxStatus.SelectedItem?.ToString()),
-                RegisteredFrom = dateTimePickerFrom.Value.Date == DateTime.Today ? null : dateTimePickerFrom.Value.Date,
-                RegisteredTo = dateTimePickerTo.Value.Date == DateTime.Today ? null : dateTimePickerTo.Value.Date
+                Statuses = GetSelectedStatuses()
             };
 
-            var cases = _service.SearchCases(criteria, checkBoxIncludeClosed.Checked);
+            var cases = _service.SearchCases(criteria, includeClosed: true);
             var rows = cases.Select(item => new NgCaseRowViewModel(item)).ToList();
             _bindingSource.DataSource = rows;
             dataGridViewCases.Refresh();
@@ -77,15 +73,20 @@ public partial class MainForm : Form
         }
     }
 
-    private static NgCaseStatus? ResolveStatus(string? value)
+    private IReadOnlyCollection<NgCaseStatus>? GetSelectedStatuses()
     {
-        return value switch
+        var statuses = new List<NgCaseStatus>();
+        if (checkBoxInProgressOnly.Checked)
         {
-            "対応中" => NgCaseStatus.InProgress,
-            "再検査待ち" => NgCaseStatus.PendingReinspection,
-            "クローズ済み" => NgCaseStatus.Closed,
-            _ => null
-        };
+            statuses.Add(NgCaseStatus.InProgress);
+        }
+
+        if (checkBoxPendingOnly.Checked)
+        {
+            statuses.Add(NgCaseStatus.PendingReinspection);
+        }
+
+        return statuses.Count == 0 ? null : statuses;
     }
 
     private void buttonSearch_Click(object sender, EventArgs e) => LoadCases();
@@ -95,10 +96,8 @@ public partial class MainForm : Form
         textBoxFreeText.Clear();
         textBoxLotNumber.Clear();
         textBoxProductModel.Clear();
-        comboBoxStatus.SelectedIndex = 0;
-        dateTimePickerFrom.Value = DateTime.Today;
-        dateTimePickerTo.Value = DateTime.Today;
-        checkBoxIncludeClosed.Checked = false;
+        checkBoxInProgressOnly.Checked = false;
+        checkBoxPendingOnly.Checked = false;
         LoadCases();
     }
 
@@ -187,11 +186,9 @@ public partial class MainForm : Form
                 FreeText = textBoxFreeText.Text.Trim(),
                 LotNumber = textBoxLotNumber.Text.Trim(),
                 ProductModel = textBoxProductModel.Text.Trim(),
-                Status = ResolveStatus(comboBoxStatus.SelectedItem?.ToString()),
-                RegisteredFrom = dateTimePickerFrom.Value.Date == DateTime.Today ? null : dateTimePickerFrom.Value.Date,
-                RegisteredTo = dateTimePickerTo.Value.Date == DateTime.Today ? null : dateTimePickerTo.Value.Date
+                Statuses = GetSelectedStatuses()
             };
-            _service.ExportCsv(criteria, dialog.FileName, checkBoxIncludeClosed.Checked);
+            _service.ExportCsv(criteria, dialog.FileName, includeClosed: true);
             MessageBox.Show(this, "CSVを出力しました。", "完了", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex)

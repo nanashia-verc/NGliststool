@@ -181,6 +181,7 @@ public class NgCaseSearchCriteria
     public string? LotNumber { get; set; }
     public string? ProductModel { get; set; }
     public NgCaseStatus? Status { get; set; }
+    public IReadOnlyCollection<NgCaseStatus>? Statuses { get; set; }
     public DateTime? RegisteredFrom { get; set; }
     public DateTime? RegisteredTo { get; set; }
 }

@@ -582,6 +582,16 @@ WHERE 1 = 1";
                 command.Parameters.AddWithValue("@Status", (int)criteria.Status.Value);
             }
 
+            if (criteria.Statuses is { Count: > 0 })
+            {
+                var statusParameters = criteria.Statuses.Select((_, index) => $"@Status{index}").ToArray();
+                sql += $" AND ng.Status IN ({string.Join(", ", statusParameters)})";
+                foreach (var (status, index) in criteria.Statuses.Select((status, index) => (status, index)))
+                {
+                    command.Parameters.AddWithValue(statusParameters[index], (int)status);
+                }
+            }
+
             if (criteria.RegisteredFrom.HasValue)
             {
                 sql += " AND ng.RegisteredAt >= @RegisteredFrom";
