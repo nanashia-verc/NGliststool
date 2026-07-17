@@ -125,47 +125,6 @@ public partial class MainForm : Form
         }
     }
 
-    private void buttonReinspection_Click(object sender, EventArgs e)
-    {
-        if (dataGridViewCases.CurrentRow?.DataBoundItem is NgCaseRowViewModel row)
-        {
-            using var dialog = new AddInspectionHistoryForm(_service, row.Id);
-            dialog.ShowDialog(this);
-            LoadCases();
-        }
-        else
-        {
-            MessageBox.Show(this, "案件を選択してください。", "確認", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-    }
-
-    private void buttonCloseCase_Click(object sender, EventArgs e)
-    {
-        if (dataGridViewCases.CurrentRow?.DataBoundItem is not NgCaseRowViewModel row)
-        {
-            MessageBox.Show(this, "案件を選択してください。", "確認", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return;
-        }
-
-        var result = MessageBox.Show(this, $"案件ID {row.Id} をクローズしますか？", "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-        if (result != DialogResult.Yes)
-        {
-            return;
-        }
-
-        try
-        {
-            _service.CloseCase(row.Id);
-            LoadCases();
-            MessageBox.Show(this, "案件をクローズしました。", "完了", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-        catch (Exception ex)
-        {
-            AppLogger.WriteError("案件のクローズに失敗しました。", ex);
-            MessageBox.Show(this, ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-    }
-
     private void buttonMaster_Click(object sender, EventArgs e)
     {
         using var dialog = new MasterManagementForm(_service);
@@ -259,12 +218,16 @@ public partial class MainForm : Form
         var style = dataGridViewCases.Rows[e.RowIndex].DefaultCellStyle;
         if (row.Status == NgCaseStatus.Closed)
         {
+            style.BackColor = Color.LightGray;
             style.ForeColor = SystemColors.GrayText;
+            style.SelectionBackColor = Color.LightGray;
             style.SelectionForeColor = SystemColors.GrayText;
         }
         else
         {
+            style.BackColor = dataGridViewCases.DefaultCellStyle.BackColor;
             style.ForeColor = dataGridViewCases.DefaultCellStyle.ForeColor;
+            style.SelectionBackColor = dataGridViewCases.DefaultCellStyle.SelectionBackColor;
             style.SelectionForeColor = dataGridViewCases.DefaultCellStyle.SelectionForeColor;
         }
     }

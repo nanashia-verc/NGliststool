@@ -17,7 +17,14 @@ public partial class AddInspectionHistoryForm : Form
         _historyId = historyId;
         InitializeComponent();
         LoadMasters();
-        if (_historyId.HasValue) LoadHistoryForEdit(_historyId.Value);
+        if (_historyId.HasValue)
+        {
+            LoadHistoryForEdit(_historyId.Value);
+        }
+        else
+        {
+            LoadLatestNgDetails();
+        }
     }
 
     private void LoadMasters()
@@ -107,6 +114,21 @@ public partial class AddInspectionHistoryForm : Form
         var status = _service.GetCase(_caseId)?.Status;
         radioButtonPending.Checked = status == NgCaseStatus.PendingReinspection;
         radioButtonInProgress.Checked = status != NgCaseStatus.PendingReinspection;
+    }
+
+    private void LoadLatestNgDetails()
+    {
+        var latestHistory = _service.GetCase(_caseId)?.InspectionHistories
+            .OrderByDescending(history => history.InspectionDateTime)
+            .ThenByDescending(history => history.Id)
+            .FirstOrDefault(history => history.Result == InspectionResult.Ng);
+        if (latestHistory is null)
+        {
+            return;
+        }
+
+        SelectItemByText(comboBoxDefectReason, latestHistory.DefectReasonName);
+        textBoxDefectDetails.Text = latestHistory.DefectDetails ?? string.Empty;
     }
 
     private static void SelectItemByText(ComboBox comboBox, string? text)

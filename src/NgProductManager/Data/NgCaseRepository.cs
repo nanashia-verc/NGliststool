@@ -604,7 +604,8 @@ WHERE 1 = 1";
                 command.Parameters.AddWithValue("@RegisteredTo", criteria.RegisteredTo.Value.ToString("yyyy-MM-dd HH:mm:ss"));
             }
 
-            sql += " ORDER BY ng.UpdatedAt DESC, ng.Id DESC";
+            sql += " ORDER BY CASE WHEN ng.Status = @ClosedStatusForSort THEN 1 ELSE 0 END, ng.UpdatedAt DESC, ng.Id DESC";
+            command.Parameters.AddWithValue("@ClosedStatusForSort", (int)NgCaseStatus.Closed);
             command.CommandText = sql;
 
             using var reader = command.ExecuteReader();

@@ -486,6 +486,57 @@ public class NgCaseServiceTests
     }
 
     [TestMethod]
+    public void SearchCases_PlacesOpenCasesBeforeClosedCases()
+    {
+        var service = new NgCaseService(_databasePath);
+        var modelId = service.CreateProductModel("M-SORT", "並び順型番");
+        var reasonId = service.CreateDefectReason("並び順理由");
+        var openCaseId = service.CreateCaseWithInitialInspection(new CreateCaseRequest
+        {
+            LotNumber = "LOT-OPEN", ProductModelId = modelId, RegisteredAt = new DateTime(2026, 7, 1),
+            InspectionDateTime = new DateTime(2026, 7, 1), Result = InspectionResult.Ng, DefectReasonId = reasonId
+        });
+        var closedCaseId = service.CreateCaseWithInitialInspection(new CreateCaseRequest
+        {
+            LotNumber = "LOT-CLOSED", ProductModelId = modelId, RegisteredAt = new DateTime(2026, 7, 2),
+            InspectionDateTime = new DateTime(2026, 7, 2), Result = InspectionResult.Ng, DefectReasonId = reasonId
+        });
+        service.CloseCase(closedCaseId);
+
+        var results = service.SearchCases(new NgCaseSearchCriteria(), includeClosed: true);
+
+        Assert.AreEqual(openCaseId, results[0].Id);
+        Assert.AreEqual(closedCaseId, results[^1].Id);
+    }
+
+    [TestMethod]
+    public void ExportCsv_WritesDatesAsTextForExcel()
+    {
+        var service = new NgCaseService(_databasePath);
+        var modelId = service.CreateProductModel("M-CSV", "CSV型番");
+        var reasonId = service.CreateDefectReason("CSV理由");
+        service.CreateCaseWithInitialInspection(new CreateCaseRequest
+        {
+            LotNumber = "LOT-CSV", ProductModelId = modelId, RegisteredAt = new DateTime(2026, 7, 1),
+            InspectionDateTime = new DateTime(2026, 7, 2), Result = InspectionResult.Ng, DefectReasonId = reasonId
+        });
+        var csvPath = Path.Combine(Path.GetTempPath(), $"ng-manager-{Guid.NewGuid():N}.csv");
+
+        try
+        {
+            service.ExportCsv(new NgCaseSearchCriteria(), csvPath);
+
+            var csv = File.ReadAllText(csvPath);
+            StringAssert.Contains(csv, "\u200B2026/07/01");
+            StringAssert.Contains(csv, "\u200B2026/07/02");
+        }
+        finally
+        {
+            if (File.Exists(csvPath)) File.Delete(csvPath);
+        }
+    }
+
+    [TestMethod]
     public void CloseCase_ClosesOpenCaseAndSetsClosedAt()
     {
         var service = new NgCaseService(_databasePath);

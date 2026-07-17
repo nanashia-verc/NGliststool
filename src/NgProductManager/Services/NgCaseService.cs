@@ -466,13 +466,13 @@ public sealed class NgCaseService
                     EscapeCsv(item.LotNumber),
                     EscapeCsv(item.ProductModelName),
                     EscapeCsv(item.ProcessName ?? string.Empty),
-                    EscapeCsv(initialHistory?.InspectionDateTime.ToString("yyyy-MM-dd") ?? string.Empty),
-                    EscapeCsv(latestHistory?.InspectionDateTime.ToString("yyyy-MM-dd") ?? string.Empty),
+                    EscapeCsv(FormatCsvDate(initialHistory?.InspectionDateTime)),
+                    EscapeCsv(FormatCsvDate(latestHistory?.InspectionDateTime)),
                     EscapeCsv(latestHistory?.DefectReasonName ?? string.Empty),
                     EscapeCsv(latestHistory?.ActionTypeName ?? string.Empty),
                     EscapeCsv(item.InspectionHistoryCount.ToString()),
-                    EscapeCsv(item.RegisteredAt.ToString("yyyy-MM-dd")),
-                    EscapeCsv(item.ClosedAt?.ToString("yyyy-MM-dd") ?? string.Empty)));
+                    EscapeCsv(FormatCsvDate(item.RegisteredAt)),
+                    EscapeCsv(FormatCsvDate(item.ClosedAt))));
             }
         }
         catch (Exception ex)
@@ -483,6 +483,9 @@ public sealed class NgCaseService
     }
 
     private static string EscapeCsv(string value) => $"\"{value.Replace("\"", "\"\"")}\"";
+
+    // Excel が日付を数値として扱い、列幅不足で #### と表示するのを防ぐため、日付列は文字列として出力する。
+    private static string FormatCsvDate(DateTime? value) => value.HasValue ? $"\u200B{value.Value:yyyy/MM/dd}" : string.Empty;
 
     private void EnsureWritableDatabasePath()
     {
