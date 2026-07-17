@@ -30,6 +30,6 @@ public sealed class InspectionHistoryDetailForm : Form
 
     private static void Add(TableLayoutPanel panel, string label, string? value)
     {
-        var row = panel.RowCount++; panel.RowStyles.Add(new RowStyle(SizeType.AutoSize)); panel.Controls.Add(new Label { Text = label, AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(0, 6, 8, 6) }, 0, row); panel.Controls.Add(new Label { Text = value ?? string.Empty, AutoSize = true, MaximumSize = new Size(820, 0), Margin = new Padding(0, 6, 0, 6), BorderStyle = BorderStyle.FixedSingle, Padding = new Padding(4) }, 1, row);
+        var row = panel.RowCount++; panel.RowStyles.Add(new RowStyle(SizeType.AutoSize)); panel.Controls.Add(new Label { Text = label, AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(0, 6, 8, 6) }, 0, row); panel.Controls.Add(new Label { Text = value ?? string.Empty, AutoSize = true, MaximumSize = new Size(820, 0), MinimumSize = new Size(820, 0), Dock = DockStyle.Fill, Margin = new Padding(0, 6, 0, 6), BorderStyle = BorderStyle.FixedSingle, Padding = new Padding(4) }, 1, row);
     }
 }
