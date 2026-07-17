@@ -526,6 +526,26 @@ SELECT last_insert_rowid();";
         }
     }
 
+    public void UpdateProductModel(int id, string code, string name) => UpdateMaster("UPDATE ProductModels SET ModelCode=@Value1, DisplayName=@Value2, UpdatedAt=@UpdatedAt WHERE Id=@Id", id, code, name);
+    public void UpdateProcess(int id, string name) => UpdateMaster("UPDATE Processes SET Name=@Value1, UpdatedAt=@UpdatedAt WHERE Id=@Id", id, name, null);
+    public void UpdateDefectReason(int id, string name) => UpdateMaster("UPDATE DefectReasons SET Name=@Value1, UpdatedAt=@UpdatedAt WHERE Id=@Id", id, name, null);
+    public void UpdateActionType(int id, string name) => UpdateMaster("UPDATE ActionTypes SET Name=@Value1, UpdatedAt=@UpdatedAt WHERE Id=@Id", id, name, null);
+    public void SetProcessActive(int id, bool active) => SetActive("Processes", id, active);
+    public void SetDefectReasonActive(int id, bool active) => SetActive("DefectReasons", id, active);
+    public void SetActionTypeActive(int id, bool active) => SetActive("ActionTypes", id, active);
+
+    private void UpdateMaster(string sql, int id, string value1, string? value2)
+    {
+        using var connection = _databaseManager.OpenConnection(); using var command = connection.CreateCommand();
+        command.CommandText = sql; command.Parameters.AddWithValue("@Value1", value1); command.Parameters.AddWithValue("@Value2", (object?)value2 ?? DBNull.Value); command.Parameters.AddWithValue("@UpdatedAt", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")); command.Parameters.AddWithValue("@Id", id); command.ExecuteNonQuery();
+    }
+
+    private void SetActive(string table, int id, bool active)
+    {
+        using var connection = _databaseManager.OpenConnection(); using var command = connection.CreateCommand();
+        command.CommandText = $"UPDATE {table} SET IsActive=@Active, UpdatedAt=@UpdatedAt WHERE Id=@Id"; command.Parameters.AddWithValue("@Active", active ? 1 : 0); command.Parameters.AddWithValue("@UpdatedAt", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")); command.Parameters.AddWithValue("@Id", id); command.ExecuteNonQuery();
+    }
+
     public List<NgCaseListItem> SearchCases(NgCaseSearchCriteria criteria, bool includeClosed = false, SqliteConnection? connection = null, SqliteTransaction? transaction = null)
     {
         var activeConnection = connection ?? _databaseManager.OpenConnection();

@@ -31,7 +31,7 @@ partial class MainForm
         search.Controls.Add(searchRow1, 0, 0);
         root.Controls.Add(search, 0, 1);
 
-        dataGridViewCases = new DataGridView { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false, AllowUserToDeleteRows = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, BackgroundColor = SystemColors.Window, BorderStyle = BorderStyle.Fixed3D, SelectionMode = DataGridViewSelectionMode.FullRowSelect };
+        dataGridViewCases = new DataGridView { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false, AllowUserToDeleteRows = false, AllowUserToResizeColumns = false, AllowUserToResizeRows = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, BackgroundColor = SystemColors.Window, BorderStyle = BorderStyle.Fixed3D, SelectionMode = DataGridViewSelectionMode.FullRowSelect };
         root.Controls.Add(dataGridViewCases, 0, 2); Controls.Add(root);
         buttonSearch.Click += buttonSearch_Click; buttonClear.Click += buttonClear_Click; buttonNewCase.Click += buttonNewCase_Click; buttonShowDetail.Click += buttonShowDetail_Click; buttonMaster.Click += buttonMaster_Click; buttonCsv.Click += buttonCsv_Click; buttonReload.Click += buttonReload_Click; buttonBackup.Click += buttonBackup_Click; buttonRestore.Click += buttonRestore_Click; dataGridViewCases.DoubleClick += dataGridViewCases_DoubleClick;
     }

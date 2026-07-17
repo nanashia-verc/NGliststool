@@ -60,6 +60,14 @@ public sealed class NgCaseService
     }
 
     public List<ProductModelMaster> GetActiveProductModels() => _repository.GetProductModels(activeOnly: true);
+    public List<ProductModelMaster> GetProductModels() => _repository.GetProductModels();
+    public void UpdateProductModel(int id, string code, string name)
+    {
+        if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name)) throw new InvalidOperationException("型番コードと名称を入力してください。");
+        if (_repository.ExistsProductModelCode(code.Trim(), id)) throw new InvalidOperationException("既に登録済みの型番コードです。");
+        _repository.UpdateProductModel(id, code.Trim(), name.Trim());
+    }
+    public void DeleteProductModel(int id) => _repository.SetProductModelActive(id, false);
 
     public int CreateProcess(string name)
     {
@@ -81,6 +89,9 @@ public sealed class NgCaseService
         while (reader.Read()) items.Add(new ProcessMaster { Id = reader.GetInt32(0), Name = reader.GetString(1), IsActive = reader.GetInt32(2), SortOrder = reader.GetInt32(3), CreatedAt = DateTime.Parse(reader.GetString(4)), UpdatedAt = DateTime.Parse(reader.GetString(5)) });
         return items;
     }
+
+    public void UpdateProcess(int id, string name) { if (string.IsNullOrWhiteSpace(name)) throw new InvalidOperationException("工程名を入力してください。"); _repository.UpdateProcess(id, name.Trim()); }
+    public void DeleteProcess(int id) => _repository.SetProcessActive(id, false);
 
     public List<string> GetLotNumbers() => _repository.GetLotNumbers();
 
@@ -304,6 +315,11 @@ public sealed class NgCaseService
     {
         return _repository.SearchCases(criteria, includeClosed);
     }
+
+    public void UpdateDefectReason(int id, string name) { if (string.IsNullOrWhiteSpace(name)) throw new InvalidOperationException("NG理由名を入力してください。"); if (_repository.ExistsDefectReason(name.Trim(), id)) throw new InvalidOperationException("既に登録済みのNG理由名です。"); _repository.UpdateDefectReason(id, name.Trim()); }
+    public void UpdateActionType(int id, string name) { if (string.IsNullOrWhiteSpace(name)) throw new InvalidOperationException("処置内容名を入力してください。"); if (_repository.ExistsActionType(name.Trim(), id)) throw new InvalidOperationException("既に登録済みの処置内容名です。"); _repository.UpdateActionType(id, name.Trim()); }
+    public void DeleteDefectReason(int id) => _repository.SetDefectReasonActive(id, false);
+    public void DeleteActionType(int id) => _repository.SetActionTypeActive(id, false);
 
     public void UpdateInspectionHistory(int ngCaseId, int historyId, InspectionHistoryInput input)
     {
