@@ -38,10 +38,16 @@ public partial class NgCaseDetailForm : Form
         labelClosedAt.Text = detail.ClosedAt?.ToString("yyyy/MM/dd") ?? string.Empty;
         labelNotes.Text = detail.Notes ?? string.Empty;
 
+        var initialHistoryId = detail.InspectionHistories
+            .OrderBy(history => history.InspectionDateTime)
+            .ThenBy(history => history.Id)
+            .Select(history => (int?)history.Id)
+            .FirstOrDefault();
+
         var rows = detail.InspectionHistories
             .OrderByDescending(history => history.InspectionDateTime)
             .ThenByDescending(history => history.Id)
-            .Select((history, index) => new InspectionRowViewModel(index == 0, history))
+            .Select((history, index) => new InspectionRowViewModel(index == 0, history.Id == initialHistoryId, history))
             .ToList();
         bindingSource.DataSource = rows;
         historyGrid.ClearSelection();
@@ -76,7 +82,7 @@ public partial class NgCaseDetailForm : Form
 
     private void buttonUpdateNotes_Click(object sender, EventArgs e)
     {
-        if (historyGrid.SelectedRows.Count > 0 && historyGrid.CurrentRow?.DataBoundItem is InspectionRowViewModel row)
+        if (historyGrid.SelectedRows.Count > 0 && historyGrid.CurrentRow?.DataBoundItem is InspectionRowViewModel row && !row.IsInitial)
         {
             using var historyDialog = new AddInspectionHistoryForm(_service, _caseId, row.Id);
             if (historyDialog.ShowDialog(this) == DialogResult.OK) LoadCase();
@@ -139,9 +145,10 @@ public partial class NgCaseDetailForm : Form
 
     private sealed class InspectionRowViewModel
     {
-        public InspectionRowViewModel(bool isCurrent, InspectionHistoryDetail history)
+        public InspectionRowViewModel(bool isCurrent, bool isInitial, InspectionHistoryDetail history)
         {
             Id = history.Id;
+            IsInitial = isInitial;
             CurrentState = isCurrent ? "● 現在" : string.Empty;
             InspectionDateTime = history.InspectionDateTime.ToString("yyyy/MM/dd");
             Result = history.Result == InspectionResult.Ng ? "NG" : "OK";
@@ -153,6 +160,7 @@ public partial class NgCaseDetailForm : Form
         }
 
         public int Id { get; }
+        public bool IsInitial { get; }
 
         public string CurrentState { get; }
         public string InspectionDateTime { get; }

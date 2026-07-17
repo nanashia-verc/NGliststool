@@ -31,6 +31,7 @@ public partial class MainForm : Form
         dataGridViewCases.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
         dataGridViewCases.MultiSelect = false;
         dataGridViewCases.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        dataGridViewCases.RowPrePaint += dataGridViewCases_RowPrePaint;
 
         dataGridViewCases.Columns.AddRange(
             new DataGridViewTextBoxColumn { DataPropertyName = "StatusText", HeaderText = "状態", Width = 90 },
@@ -248,11 +249,32 @@ public partial class MainForm : Form
         }
     }
 
+    private void dataGridViewCases_RowPrePaint(object? sender, DataGridViewRowPrePaintEventArgs e)
+    {
+        if (dataGridViewCases.Rows[e.RowIndex].DataBoundItem is not NgCaseRowViewModel row)
+        {
+            return;
+        }
+
+        var style = dataGridViewCases.Rows[e.RowIndex].DefaultCellStyle;
+        if (row.Status == NgCaseStatus.Closed)
+        {
+            style.ForeColor = SystemColors.GrayText;
+            style.SelectionForeColor = SystemColors.GrayText;
+        }
+        else
+        {
+            style.ForeColor = dataGridViewCases.DefaultCellStyle.ForeColor;
+            style.SelectionForeColor = dataGridViewCases.DefaultCellStyle.SelectionForeColor;
+        }
+    }
+
     private sealed class NgCaseRowViewModel
     {
         public NgCaseRowViewModel(NgCaseListItem item)
         {
             Id = item.Id;
+            Status = item.Status;
             StatusText = item.Status switch
             {
                 NgCaseStatus.InProgress => "対応中",
@@ -272,6 +294,7 @@ public partial class MainForm : Form
         }
 
         public int Id { get; }
+        public NgCaseStatus Status { get; }
         public string StatusText { get; }
         public string LotNumber { get; }
         public string ProductModelName { get; }
