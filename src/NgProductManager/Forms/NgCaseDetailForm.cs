@@ -96,6 +96,18 @@ public partial class NgCaseDetailForm : Form
         }
     }
 
+    private void buttonShowHistoryDetails_Click(object sender, EventArgs e)
+    {
+        if (historyGrid.SelectedRows.Count == 0 || historyGrid.CurrentRow?.DataBoundItem is not InspectionRowViewModel row)
+        {
+            MessageBox.Show(this, "履歴を選択してください。", "確認", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        using var dialog = new InspectionHistoryDetailForm(_service, _caseId, row.Id, row.IsInitial);
+        if (dialog.ShowDialog(this) == DialogResult.OK) LoadCase();
+    }
+
     private void buttonAddAttachment_Click(object? sender, EventArgs e)
     {
         using var dialog = new OpenFileDialog { Filter = "画像ファイル|*.png;*.jpg;*.jpeg;*.bmp" };
@@ -153,9 +165,9 @@ public partial class NgCaseDetailForm : Form
             InspectionDateTime = history.InspectionDateTime.ToString("yyyy/MM/dd");
             Result = history.Result == InspectionResult.Ng ? "NG" : "OK";
             DefectReasonName = history.DefectReasonName ?? string.Empty;
-            DefectDetails = history.DefectDetails ?? string.Empty;
+            DefectDetails = Shorten(history.DefectDetails);
             ActionTypeName = history.ActionTypeName ?? string.Empty;
-            ActionDetails = history.ActionDetails ?? string.Empty;
+            ActionDetails = Shorten(history.ActionDetails);
             InspectorName = history.InspectorName ?? string.Empty;
         }
 
@@ -170,5 +182,7 @@ public partial class NgCaseDetailForm : Form
         public string ActionTypeName { get; }
         public string ActionDetails { get; }
         public string InspectorName { get; }
+
+        private static string Shorten(string? text) => string.IsNullOrEmpty(text) || text.Length <= 24 ? text ?? string.Empty : $"{text[..24]}…";
     }
 }
