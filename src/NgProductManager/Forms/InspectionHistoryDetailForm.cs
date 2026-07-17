@@ -13,8 +13,8 @@ public sealed class InspectionHistoryDetailForm : Form
     public InspectionHistoryDetailForm(NgCaseService service, int caseId, int historyId, bool isInitial)
     {
         _service = service; _caseId = caseId; _historyId = historyId; _isInitial = isInitial;
-        Text = "検査履歴詳細"; ClientSize = new Size(600, 500); MinimumSize = new Size(500, 420); StartPosition = FormStartPosition.CenterParent;
-        var root = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(14), ColumnCount = 2, AutoScroll = true };
+        Text = "検査履歴詳細"; AutoSize = true; AutoSizeMode = AutoSizeMode.GrowAndShrink; MaximumSize = new Size(1000, Screen.FromControl(this).WorkingArea.Height - 40); StartPosition = FormStartPosition.CenterParent;
+        var root = new TableLayoutPanel { AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, Padding = new Padding(14), ColumnCount = 2 };
         root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100)); root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         var history = _service.GetCase(caseId)?.InspectionHistories.FirstOrDefault(item => item.Id == historyId);
         if (history is null) { Close(); return; }
@@ -30,6 +30,6 @@ public sealed class InspectionHistoryDetailForm : Form
 
     private static void Add(TableLayoutPanel panel, string label, string? value)
     {
-        var row = panel.RowCount++; panel.RowStyles.Add(new RowStyle(SizeType.AutoSize)); panel.Controls.Add(new Label { Text = label, AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(0, 6, 8, 6) }, 0, row); panel.Controls.Add(new TextBox { Text = value ?? string.Empty, ReadOnly = true, Multiline = true, AutoSize = true, MinimumSize = new Size(0, 30), Dock = DockStyle.Top, BorderStyle = BorderStyle.FixedSingle, BackColor = SystemColors.Window }, 1, row);
+        var row = panel.RowCount++; panel.RowStyles.Add(new RowStyle(SizeType.AutoSize)); panel.Controls.Add(new Label { Text = label, AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(0, 6, 8, 6) }, 0, row); panel.Controls.Add(new Label { Text = value ?? string.Empty, AutoSize = true, MaximumSize = new Size(820, 0), Margin = new Padding(0, 6, 0, 6), BorderStyle = BorderStyle.FixedSingle, Padding = new Padding(4) }, 1, row);
     }
 }

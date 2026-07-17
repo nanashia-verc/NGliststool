@@ -19,7 +19,7 @@ partial class MainForm
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
         var actions = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = true, Margin = new Padding(0, 0, 0, 6) };
-        buttonNewCase = AddButton(actions, "新規NG登録", 120); buttonShowDetail = AddButton(actions, "詳細表示", 100); buttonMaster = AddButton(actions, "マスター管理", 110); buttonCsv = AddButton(actions, "CSV出力", 90); buttonReload = AddButton(actions, "再読込", 90); buttonBackup = AddButton(actions, "バックアップ", 100); buttonRestore = AddButton(actions, "復元", 80);
+        buttonNewCase = AddButton(actions, "新規NG登録", 120); buttonShowDetail = AddButton(actions, "履歴表示", 100); buttonMaster = AddButton(actions, "マスター管理", 110); buttonCsv = AddButton(actions, "CSV出力", 90); buttonReload = AddButton(actions, "再読込", 90); buttonBackup = AddButton(actions, "バックアップ", 100); buttonRestore = AddButton(actions, "復元", 80);
         root.Controls.Add(actions, 0, 0);
 
         var search = new TableLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, RowCount = 1, ColumnCount = 1, Margin = new Padding(0, 0, 0, 8) };
