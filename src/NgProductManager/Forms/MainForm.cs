@@ -220,8 +220,8 @@ public partial class MainForm : Form
         {
             style.BackColor = Color.LightGray;
             style.ForeColor = SystemColors.GrayText;
-            style.SelectionBackColor = Color.LightGray;
-            style.SelectionForeColor = SystemColors.GrayText;
+            style.SelectionBackColor = dataGridViewCases.DefaultCellStyle.SelectionBackColor;
+            style.SelectionForeColor = dataGridViewCases.DefaultCellStyle.SelectionForeColor;
         }
         else
         {
