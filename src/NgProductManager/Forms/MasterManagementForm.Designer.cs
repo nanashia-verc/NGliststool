@@ -33,9 +33,9 @@ partial class MasterManagementForm
 
         var tab = new TabControl { Dock = DockStyle.Fill };
         tab.TabPages.Add(CreateModelPage());
-        tab.TabPages.Add(CreateSingleNamePage("工程", "工程名", out listBoxProcesses, out textBoxProcessName, out buttonAddProcess));
-        tab.TabPages.Add(CreateSingleNamePage("NG理由", "NG理由名", out listBoxDefectReasons, out textBoxReasonName, out buttonAddReason));
-        tab.TabPages.Add(CreateSingleNamePage("処置内容", "処置内容名", out listBoxActionTypes, out textBoxActionName, out buttonAddAction));
+        tab.TabPages.Add(CreateSingleNamePage("工程", "工程名", out listBoxProcesses, out textBoxProcessName, out buttonAddProcess, out buttonEditProcess, out buttonDeleteProcess));
+        tab.TabPages.Add(CreateSingleNamePage("NG理由", "NG理由名", out listBoxDefectReasons, out textBoxReasonName, out buttonAddReason, out buttonEditReason, out buttonDeleteReason));
+        tab.TabPages.Add(CreateSingleNamePage("処置内容", "処置内容名", out listBoxActionTypes, out textBoxActionName, out buttonAddAction, out buttonEditAction, out buttonDeleteAction));
         root.Controls.Add(tab, 0, 1);
         Controls.Add(root);
 
@@ -43,6 +43,10 @@ partial class MasterManagementForm
         buttonAddProcess.Click += buttonAddProcess_Click;
         buttonAddReason.Click += buttonAddReason_Click;
         buttonAddAction.Click += buttonAddAction_Click;
+        buttonEditModel.Click += buttonEditModel_Click; buttonDeleteModel.Click += buttonDeleteModel_Click;
+        buttonEditProcess.Click += buttonEditProcess_Click; buttonDeleteProcess.Click += buttonDeleteProcess_Click;
+        buttonEditReason.Click += buttonEditReason_Click; buttonDeleteReason.Click += buttonDeleteReason_Click;
+        buttonEditAction.Click += buttonEditAction_Click; buttonDeleteAction.Click += buttonDeleteAction_Click;
     }
 
     private TabPage CreateModelPage()
@@ -52,16 +56,20 @@ partial class MasterManagementForm
         textBoxModelCode = AddTextField(inputPanel, "型番コード");
         textBoxModelName = AddTextField(inputPanel, "表示名");
         buttonAddModel = AddButton(inputPanel, "型番を登録");
+        buttonEditModel = AddButton(inputPanel, "選択項目を修正");
+        buttonDeleteModel = AddButton(inputPanel, "選択項目を削除");
         page.Controls.Add(layout);
         return page;
     }
 
-    private TabPage CreateSingleNamePage(string title, string label, out ListBox listBox, out TextBox textBox, out Button button)
+    private TabPage CreateSingleNamePage(string title, string label, out ListBox listBox, out TextBox textBox, out Button button, out Button editButton, out Button deleteButton)
     {
         var page = new TabPage(title);
         var layout = CreatePageLayout(out listBox, out var inputPanel);
         textBox = AddTextField(inputPanel, label);
         button = AddButton(inputPanel, $"{title}を登録");
+        editButton = AddButton(inputPanel, "選択項目を修正");
+        deleteButton = AddButton(inputPanel, "選択項目を削除");
         page.Controls.Add(layout);
         return page;
     }
@@ -104,8 +112,8 @@ partial class MasterManagementForm
     private TextBox textBoxProcessName = null!;
     private TextBox textBoxReasonName = null!;
     private TextBox textBoxActionName = null!;
-    private Button buttonAddModel = null!;
-    private Button buttonAddProcess = null!;
-    private Button buttonAddReason = null!;
-    private Button buttonAddAction = null!;
+    private Button buttonAddModel = null!, buttonEditModel = null!, buttonDeleteModel = null!;
+    private Button buttonAddProcess = null!, buttonEditProcess = null!, buttonDeleteProcess = null!;
+    private Button buttonAddReason = null!, buttonEditReason = null!, buttonDeleteReason = null!;
+    private Button buttonAddAction = null!, buttonEditAction = null!, buttonDeleteAction = null!;
 }

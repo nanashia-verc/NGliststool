@@ -131,6 +131,28 @@ public partial class MasterManagementForm : Form
         AddMasterMenu(listBoxActionTypes, EditAction, id => _service.DeleteActionType(id));
     }
 
+    private void buttonEditModel_Click(object? sender, EventArgs e) => EditSelected(listBoxModels, EditModel);
+    private void buttonEditProcess_Click(object? sender, EventArgs e) => EditSelected(listBoxProcesses, EditProcess);
+    private void buttonEditReason_Click(object? sender, EventArgs e) => EditSelected(listBoxDefectReasons, EditReason);
+    private void buttonEditAction_Click(object? sender, EventArgs e) => EditSelected(listBoxActionTypes, EditAction);
+    private void buttonDeleteModel_Click(object? sender, EventArgs e) => DeleteSelected(listBoxModels, id => _service.DeleteProductModel(id));
+    private void buttonDeleteProcess_Click(object? sender, EventArgs e) => DeleteSelected(listBoxProcesses, id => _service.DeleteProcess(id));
+    private void buttonDeleteReason_Click(object? sender, EventArgs e) => DeleteSelected(listBoxDefectReasons, id => _service.DeleteDefectReason(id));
+    private void buttonDeleteAction_Click(object? sender, EventArgs e) => DeleteSelected(listBoxActionTypes, id => _service.DeleteActionType(id));
+
+    private void EditSelected(ListBox listBox, Action<object> edit)
+    {
+        if (listBox.SelectedItem is not IMasterListItem item) { MessageBox.Show(this, "修正する項目を選択してください。", "確認", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+        try { edit(item.Value); LoadMasters(); } catch (Exception ex) { MessageBox.Show(this, ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+    }
+
+    private void DeleteSelected(ListBox listBox, Action<int> delete)
+    {
+        if (listBox.SelectedItem is not IMasterListItem item) { MessageBox.Show(this, "削除する項目を選択してください。", "確認", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+        if (MessageBox.Show(this, "このマスターを削除しますか？\n既存案件の表示は維持され、新規入力では選べなくなります。", "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+        delete(item.Id); LoadMasters();
+    }
+
     private void AddMasterMenu(ListBox listBox, Action<object> edit, Action<int> delete)
     {
         var menu = new ContextMenuStrip();
